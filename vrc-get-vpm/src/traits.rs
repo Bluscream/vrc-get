@@ -96,6 +96,7 @@ pub trait HttpClient: Sync {
     ) -> impl Future<Output = io::Result<Option<(impl AsyncRead + Send, Option<Box<str>>)>>> + Send;
 }
 
+#[cfg(feature = "reqwest")]
 impl HttpClient for reqwest::Client {
     async fn get(&self, url: &Url, headers: &IndexMap<&str, &str>) -> io::Result<impl AsyncRead> {
         // file not found: err

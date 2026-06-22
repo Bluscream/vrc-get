@@ -6,26 +6,27 @@ use std::collections::HashSet;
 use std::fmt::Formatter;
 use std::marker::PhantomData;
 
-pub(crate) struct DedupForwarder<T> {
+pub(crate) struct DedupForwarder<'de, T>
+where
+    T: DeserializeSeed<'de>,
+{
     inner: T,
-    meta: Meta,
+    phantom_data: PhantomData<&'de ()>,
 }
 
-struct Meta;
-
-impl<T> DedupForwarder<T> {
+impl<'de, T> DedupForwarder<'de, T>
+where
+    T: DeserializeSeed<'de>,
+{
     pub fn new(inner: T) -> Self {
-        Self { inner, meta: Meta }
+        Self {
+            inner,
+            phantom_data: PhantomData,
+        }
     }
 }
 
-impl Meta {
-    fn new_dedup_forwarder<V>(&self, visitor: V) -> DedupForwarder<V> {
-        DedupForwarder::new(visitor)
-    }
-}
-
-impl<'de, T> DeserializeSeed<'de> for DedupForwarder<T>
+impl<'de, T> DeserializeSeed<'de> for DedupForwarder<'de, T>
 where
     T: DeserializeSeed<'de>,
 {
@@ -35,7 +36,7 @@ where
     where
         D: Deserializer<'de>,
     {
-        self.inner.deserialize(DedupForwarder::new(deserializer))
+        self.inner.deserialize(DedupDeserializer::new(deserializer))
     }
 }
 
@@ -129,14 +130,47 @@ macro_rules! forward_deserializer {
     };
 }
 
-impl<'de, D> Deserializer<'de> for DedupForwarder<D>
+struct Meta;
+
+impl Meta {
+    fn new_dedup_forwarder_visitor<'de, V: Visitor<'de>>(
+        &self,
+        visitor: V,
+    ) -> DedupVisitor<'de, V> {
+        DedupVisitor::new(visitor)
+    }
+}
+
+pub(crate) struct DedupDeserializer<'de, D>
+where
+    D: Deserializer<'de>,
+{
+    inner: D,
+    meta: Meta,
+    _phantom_data: PhantomData<&'de ()>,
+}
+
+impl<'de, D> DedupDeserializer<'de, D>
+where
+    D: Deserializer<'de>,
+{
+    pub fn new(visitor: D) -> Self {
+        Self {
+            inner: visitor,
+            meta: Meta,
+            _phantom_data: PhantomData,
+        }
+    }
+}
+
+impl<'de, D> Deserializer<'de> for DedupDeserializer<'de, D>
 where
     D: Deserializer<'de>,
 {
     type Error = D::Error;
 
     forward_deserializer!(
-        new_dedup_forwarder:
+        new_dedup_forwarder_visitor:
         deserialize_any
         deserialize_bool
         deserialize_i8
@@ -214,7 +248,27 @@ macro_rules! forward_visitor {
     };
 }
 
-impl<'de, V> Visitor<'de> for DedupForwarder<V>
+pub(crate) struct DedupVisitor<'de, V>
+where
+    V: Visitor<'de>,
+{
+    inner: V,
+    _phantom_data: PhantomData<&'de ()>,
+}
+
+impl<'de, V> DedupVisitor<'de, V>
+where
+    V: Visitor<'de>,
+{
+    pub fn new(visitor: V) -> Self {
+        Self {
+            inner: visitor,
+            _phantom_data: PhantomData,
+        }
+    }
+}
+
+impl<'de, V> Visitor<'de> for DedupVisitor<'de, V>
 where
     V: Visitor<'de>,
 {
@@ -258,7 +312,7 @@ where
     where
         D: Deserializer<'de>,
     {
-        self.inner.visit_some(DedupForwarder::new(deserializer))
+        self.inner.visit_some(DedupDeserializer::new(deserializer))
     }
 
     fn visit_unit<E>(self) -> Result<Self::Value, E>
@@ -273,14 +327,14 @@ where
         D: Deserializer<'de>,
     {
         self.inner
-            .visit_newtype_struct(DedupForwarder::new(deserializer))
+            .visit_newtype_struct(DedupDeserializer::new(deserializer))
     }
 
     fn visit_seq<A>(self, seq: A) -> Result<Self::Value, A::Error>
     where
         A: SeqAccess<'de>,
     {
-        self.inner.visit_seq(DedupForwarder::new(seq))
+        self.inner.visit_seq(DedupSeqAccess::new(seq))
     }
 
     fn visit_map<A>(self, map: A) -> Result<Self::Value, A::Error>
@@ -294,11 +348,31 @@ where
     where
         A: EnumAccess<'de>,
     {
-        self.inner.visit_enum(DedupForwarder::new(data))
+        self.inner.visit_enum(DedupEnumAccess::new(data))
     }
 }
 
-impl<'de, A> SeqAccess<'de> for DedupForwarder<A>
+pub(crate) struct DedupSeqAccess<'de, A>
+where
+    A: SeqAccess<'de>,
+{
+    inner: A,
+    _phantom_data: PhantomData<&'de ()>,
+}
+
+impl<'de, A> DedupSeqAccess<'de, A>
+where
+    A: SeqAccess<'de>,
+{
+    pub fn new(visitor: A) -> Self {
+        Self {
+            inner: visitor,
+            _phantom_data: PhantomData,
+        }
+    }
+}
+
+impl<'de, A> SeqAccess<'de> for DedupSeqAccess<'de, A>
 where
     A: SeqAccess<'de>,
 {
@@ -316,23 +390,63 @@ where
     }
 }
 
-impl<'de, A> EnumAccess<'de> for DedupForwarder<A>
+pub(crate) struct DedupEnumAccess<'de, A>
+where
+    A: EnumAccess<'de>,
+{
+    inner: A,
+    _phantom_data: PhantomData<&'de ()>,
+}
+
+impl<'de, A> DedupEnumAccess<'de, A>
+where
+    A: EnumAccess<'de>,
+{
+    pub fn new(visitor: A) -> Self {
+        Self {
+            inner: visitor,
+            _phantom_data: PhantomData,
+        }
+    }
+}
+
+impl<'de, A> EnumAccess<'de> for DedupEnumAccess<'de, A>
 where
     A: EnumAccess<'de>,
 {
     type Error = A::Error;
-    type Variant = DedupForwarder<A::Variant>;
+    type Variant = DedupVariantAccess<'de, A::Variant>;
 
     fn variant_seed<V>(self, seed: V) -> Result<(V::Value, Self::Variant), Self::Error>
     where
         V: DeserializeSeed<'de>,
     {
         let (value, variant) = self.inner.variant_seed(DedupForwarder::new(seed))?;
-        Ok((value, DedupForwarder::new(variant)))
+        Ok((value, DedupVariantAccess::new(variant)))
     }
 }
 
-impl<'de, A> VariantAccess<'de> for DedupForwarder<A>
+pub(crate) struct DedupVariantAccess<'de, A>
+where
+    A: VariantAccess<'de>,
+{
+    inner: A,
+    _phantom_data: PhantomData<&'de ()>,
+}
+
+impl<'de, A> DedupVariantAccess<'de, A>
+where
+    A: VariantAccess<'de>,
+{
+    pub fn new(visitor: A) -> Self {
+        Self {
+            inner: visitor,
+            _phantom_data: PhantomData,
+        }
+    }
+}
+
+impl<'de, A> VariantAccess<'de> for DedupVariantAccess<'de, A>
 where
     A: VariantAccess<'de>,
 {
@@ -353,7 +467,7 @@ where
     where
         V: Visitor<'de>,
     {
-        self.inner.tuple_variant(len, DedupForwarder::new(visitor))
+        self.inner.tuple_variant(len, DedupVisitor::new(visitor))
     }
 
     fn struct_variant<V>(
@@ -365,16 +479,20 @@ where
         V: Visitor<'de>,
     {
         self.inner
-            .struct_variant(fields, DedupForwarder::new(visitor))
+            .struct_variant(fields, DedupVisitor::new(visitor))
     }
 }
 
-struct DedupMapAccess<A> {
+struct DedupMapAccess<'de, A>
+where
+    A: MapAccess<'de>,
+{
     map: A,
     existing_keys: HashSet<String>,
+    _phantom_data: PhantomData<&'de ()>,
 }
 
-impl<'de, A> DedupMapAccess<A>
+impl<'de, A> DedupMapAccess<'de, A>
 where
     A: MapAccess<'de>,
 {
@@ -382,11 +500,12 @@ where
         Self {
             map,
             existing_keys: HashSet::new(),
+            _phantom_data: PhantomData,
         }
     }
 }
 
-impl<'de, A> MapAccess<'de> for DedupMapAccess<A>
+impl<'de, A> MapAccess<'de> for DedupMapAccess<'de, A>
 where
     A: MapAccess<'de>,
 {
@@ -436,18 +555,29 @@ where
     }
 }
 
-struct MapKeySeed<'a, T> {
+struct MapKeySeed<'a, 'de, T>
+where
+    T: DeserializeSeed<'de>,
+{
     inner: T,
     as_str: &'a mut Option<String>,
+    _phantom_data: PhantomData<&'de ()>,
 }
 
-impl<'a, T> MapKeySeed<'a, T> {
+impl<'a, 'de, T> MapKeySeed<'a, 'de, T>
+where
+    T: DeserializeSeed<'de>,
+{
     fn new(inner: T, as_str: &'a mut Option<String>) -> Self {
-        Self { inner, as_str }
+        Self {
+            inner,
+            as_str,
+            _phantom_data: PhantomData,
+        }
     }
 }
 
-impl<'de, T> DeserializeSeed<'de> for MapKeySeed<'_, T>
+impl<'de, T> DeserializeSeed<'de> for MapKeySeed<'_, 'de, T>
 where
     T: DeserializeSeed<'de>,
 {
@@ -462,31 +592,42 @@ where
     }
 }
 
-struct MapKeyDeserializer<'a, T> {
+struct MapKeyDeserializer<'a, 'de, T>
+where
+    T: Deserializer<'de>,
+{
     inner: T,
     meta: MapKeyMeta<'a>,
+    _p: PhantomData<&'de ()>,
 }
 
 struct MapKeyMeta<'a> {
     as_str: &'a mut Option<String>,
 }
 
-impl<'a, T> MapKeyDeserializer<'a, T> {
+impl<'a, 'de, T> MapKeyDeserializer<'a, 'de, T>
+where
+    T: Deserializer<'de>,
+{
     fn new(inner: T, as_str: &'a mut Option<String>) -> Self {
         Self {
             inner,
             meta: MapKeyMeta { as_str },
+            _p: PhantomData,
         }
     }
 }
 
 impl<'a> MapKeyMeta<'a> {
-    fn new_map_key_deserializer<V>(self, visitor: V) -> MapKeyVisitor<'a, V> {
+    fn new_map_key_deserializer<'de, V>(self, visitor: V) -> MapKeyVisitor<'a, 'de, V>
+    where
+        V: Visitor<'de>,
+    {
         MapKeyVisitor::new(visitor, self.as_str)
     }
 }
 
-impl<'de, T> Deserializer<'de> for MapKeyDeserializer<'_, T>
+impl<'de, T> Deserializer<'de> for MapKeyDeserializer<'_, 'de, T>
 where
     T: Deserializer<'de>,
 {
@@ -532,18 +673,29 @@ where
     }
 }
 
-struct MapKeyVisitor<'a, T> {
+struct MapKeyVisitor<'a, 'de, T>
+where
+    T: Visitor<'de>,
+{
     inner: T,
     as_str: &'a mut Option<String>,
+    _p: PhantomData<&'de ()>,
 }
 
-impl<'a, T> MapKeyVisitor<'a, T> {
+impl<'a, 'de, T> MapKeyVisitor<'a, 'de, T>
+where
+    T: Visitor<'de>,
+{
     fn new(inner: T, as_str: &'a mut Option<String>) -> Self {
-        Self { inner, as_str }
+        Self {
+            inner,
+            as_str,
+            _p: PhantomData,
+        }
     }
 }
 
-impl<'de, T> Visitor<'de> for MapKeyVisitor<'_, T>
+impl<'de, T> Visitor<'de> for MapKeyVisitor<'_, 'de, T>
 where
     T: Visitor<'de>,
 {
@@ -608,7 +760,7 @@ where
     where
         D: Deserializer<'de>,
     {
-        self.inner.visit_some(DedupForwarder::new(deserializer))
+        self.inner.visit_some(DedupDeserializer::new(deserializer))
     }
 
     fn visit_unit<E>(self) -> Result<Self::Value, E>
@@ -623,14 +775,14 @@ where
         D: Deserializer<'de>,
     {
         self.inner
-            .visit_newtype_struct(DedupForwarder::new(deserializer))
+            .visit_newtype_struct(DedupDeserializer::new(deserializer))
     }
 
     fn visit_seq<A>(self, seq: A) -> Result<Self::Value, A::Error>
     where
         A: SeqAccess<'de>,
     {
-        self.inner.visit_seq(DedupForwarder::new(seq))
+        self.inner.visit_seq(DedupSeqAccess::new(seq))
     }
 
     fn visit_map<A>(self, map: A) -> Result<Self::Value, A::Error>
@@ -644,6 +796,6 @@ where
     where
         A: EnumAccess<'de>,
     {
-        self.inner.visit_enum(DedupForwarder::new(data))
+        self.inner.visit_enum(DedupEnumAccess::new(data))
     }
 }

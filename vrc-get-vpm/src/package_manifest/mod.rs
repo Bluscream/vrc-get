@@ -1,7 +1,7 @@
 mod partial_unity_version;
 mod yank_state;
 
-use crate::utils::DedupForwarder;
+use crate::utils::DedupDeserializer;
 use crate::version::{Version, VersionRange};
 use indexmap::IndexMap;
 use serde::{Deserialize, Deserializer};
@@ -111,12 +111,12 @@ macro_rules! package_json_struct {
     };
 }
 
-fn default_if_none<'de, D, T>(de: D) -> Result<T, D::Error>
+fn default_if_none<'de, D, TR>(de: D) -> Result<TR, D::Error>
 where
     D: Deserializer<'de>,
-    T: Deserialize<'de> + Default,
+    TR: Deserialize<'de> + Default,
 {
-    <Option<T>>::deserialize(de).map(|x| x.unwrap_or_default())
+    <Option<TR>>::deserialize(de).map(|x| x.unwrap_or_default())
 }
 
 package_json_struct! {
@@ -266,7 +266,7 @@ impl<'de> Deserialize<'de> for LooseManifest {
             }
         }
 
-        let strict = LooseManifest::deserialize(DedupForwarder::new(deserializer))?;
+        let strict = LooseManifest::deserialize(DedupDeserializer::<'de, _>::new(deserializer))?;
 
         Ok(LooseManifest(initialize_from_package_json_like!(strict)))
     }

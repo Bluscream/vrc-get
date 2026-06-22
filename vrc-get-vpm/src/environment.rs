@@ -72,7 +72,7 @@ pub async fn add_remote_repo(
 
     io.create_dir_all(REPO_CACHE_FOLDER.as_ref()).await?;
     let file_name = write_new_repo(&local_cache, io).await?;
-    let repo_path = io.resolve(format!("{REPO_CACHE_FOLDER}/{file_name}").as_ref());
+    let repo_path = io.resolve_impl(format!("{REPO_CACHE_FOLDER}/{file_name}").as_ref());
 
     assert!(
         settings.add_remote_repo(&url, name, headers, local_cache.repo(), &repo_path),
@@ -92,7 +92,7 @@ pub async fn cleanup_repos_folder(
         // package cache management file used by VCC but not used by vrc-get
         OsString::from("package-cache.json"),
     ]);
-    let repos_base = io.resolve(REPO_CACHE_FOLDER.as_ref());
+    let repos_base = io.resolve_impl(REPO_CACHE_FOLDER.as_ref());
 
     for x in settings.get_user_repos() {
         if let Ok(relative) = x.local_path().strip_prefix(&repos_base)

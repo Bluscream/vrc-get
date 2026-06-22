@@ -72,7 +72,8 @@ impl VccDatabaseConnection {
                 ) -> io::Result<(ProjectType, Option<UnityVersion>, Option<String>)>
                 {
                     let project =
-                        UnityProject::load(DefaultProjectIo::new(io.resolve(path).into())).await?;
+                        UnityProject::load(DefaultProjectIo::new(io.resolve_impl(path).into()))
+                            .await?;
                     let detected_type = project.detect_project_type().await;
                     Ok((
                         detected_type,

@@ -23,6 +23,7 @@ mod utils;
 pub mod version;
 mod version_selector;
 
+#[cfg(not(r2cs))]
 pub mod repositories_file;
 
 #[cfg(feature = "unity")]

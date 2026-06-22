@@ -217,7 +217,6 @@ impl RemotePackages {
         self.versions
             .values()
             .filter(|json| selector.satisfies(json))
-            .clone()
             .filter(|json| !json.is_yanked())
             .max_by_key(|json| json.version())
     }

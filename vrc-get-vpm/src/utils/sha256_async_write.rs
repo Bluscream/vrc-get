@@ -23,8 +23,8 @@ impl<W: AsyncWrite> Sha256AsyncWrite<W> {
         }
     }
 
-    pub fn finalize(self) -> (W, Output<Sha256>) {
-        (self.inner, self.hasher.finalize())
+    pub fn finalize(self) -> (W, [u8; 256 / 8]) {
+        (self.inner, self.hasher.finalize().0)
     }
 }
 

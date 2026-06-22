@@ -168,8 +168,10 @@ impl Version {
     }
 }
 
+#[cfg(not(r2cs))]
 pub struct StrictEqVersion<V: Borrow<Version> = Version>(pub V);
 
+#[cfg(not(r2cs))]
 impl<V1, V2> PartialEq<StrictEqVersion<V2>> for StrictEqVersion<V1>
 where
     V1: Borrow<Version>,
@@ -186,4 +188,5 @@ where
     }
 }
 
+#[cfg(not(r2cs))]
 impl Eq for StrictEqVersion {}

@@ -15,7 +15,7 @@ static FILE_NAME: &str = "vcc.liteDb";
 
 impl VccDatabaseConnection {
     pub async fn connect(io: &DefaultEnvironmentIo) -> io::Result<Self> {
-        let path = io.resolve(FILE_NAME.as_ref());
+        let path = io.resolve_impl(FILE_NAME.as_ref());
 
         let lock = {
             use sha1::Digest;

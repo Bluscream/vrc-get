@@ -217,7 +217,8 @@ impl RepoHolder {
     ) {
         let start = std::time::Instant::now();
         let result = futures::future::join_all(self.cached_repos_new.iter_mut().map(
-            async |(path, repository)| {
+            // async || broken with new trait resolver
+            |(path, repository)| async move {
                 if let Some(info) = repository.remote_download_info() {
                     log::debug!("downloading remote repo '{}'", info.url);
                     match RemoteRepository::download_with_etag(

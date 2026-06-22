@@ -2,6 +2,7 @@ use crate::environment::REPO_CACHE_FOLDER;
 use crate::io::{DefaultEnvironmentIo, DefaultProjectIo, IoTrait, TokioFile};
 use crate::repository::LocalCachedRepository;
 use crate::traits::AbortCheck;
+#[cfg(not(r2cs))]
 use crate::utils::Sha256AsyncWrite;
 use crate::{HttpClient, PackageInfo, PackageManifest, io};
 use futures::prelude::*;
@@ -161,6 +162,7 @@ async fn get_package<T: HttpClient>(
 /// * `sha256`: sha256 hash if specified
 ///
 /// returns: Option<File> readable zip file or None
+#[cfg_attr(r2cs, r2cs_native)]
 async fn try_load_package_cache(
     io: &DefaultEnvironmentIo,
     zip_path: &Path,
@@ -211,6 +213,7 @@ async fn try_load_package_cache(
 /// * `url`: url to zip file
 ///
 /// returns: Result<File, Error> the readable zip file.
+#[cfg_attr(r2cs, r2cs_native)]
 async fn download_package_zip(
     http: Option<&impl HttpClient>,
     io: &DefaultEnvironmentIo,
@@ -235,7 +238,6 @@ async fn download_package_zip(
     debug!("finished downloading {url}");
 
     let (mut cache_file, hash) = writer.finalize();
-    let hash: [u8; 256 / 8] = hash.into();
 
     cache_file.flush().await?;
     cache_file.seek(SeekFrom::Start(0)).await?;

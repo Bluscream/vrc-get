@@ -3,6 +3,7 @@ mod crlf_json_formatter;
 mod deup_deserializer;
 mod extract_zip;
 mod save_controller;
+//#[cfg(not(r2cs))]
 mod sha256_async_write;
 
 use crate::io;
@@ -10,6 +11,7 @@ use crate::io::{DirEntry, IoTrait};
 use async_zip::error::ZipError;
 pub(crate) use copy_recursive::copy_recursive;
 pub(crate) use crlf_json_formatter::to_vec_pretty_os_eol;
+pub(crate) use deup_deserializer::DedupDeserializer;
 pub(crate) use deup_deserializer::DedupForwarder;
 use either::Either;
 pub(crate) use extract_zip::extract_zip;
@@ -20,8 +22,14 @@ pub(crate) use save_controller::SaveController;
 use serde::Serialize;
 use serde_json::error::Category;
 use serde_json::{Map, Value};
+//#[cfg(not(r2cs))]
+use serde::ser::{
+    SerializeMap, SerializeStruct, SerializeStructVariant, SerializeTuple, SerializeTupleStruct,
+    SerializeTupleVariant,
+};
 pub(crate) use sha256_async_write::Sha256AsyncWrite;
 use std::error::Error;
+use std::fmt::Display;
 use std::path::{Component, Path, PathBuf};
 use std::pin::Pin;
 use std::task::{Context, Poll, ready};
@@ -43,6 +51,7 @@ pub(crate) trait MapResultExt<T> {
     fn err_mapped(self) -> Result<T, Self::Output>;
 }
 
+#[cfg(feature = "reqwest")]
 impl<T> MapResultExt<T> for Result<T, reqwest::Error> {
     type Output = io::Error;
 
@@ -130,7 +139,10 @@ impl JsonMapExt for Map<String, Value> {
 
 pin_project! {
     #[must_use = "iterator adaptors are lazy and do nothing unless consumed"]
-    pub(crate) struct FlattenOk<S> where S: TryStream{
+    pub(crate) struct FlattenOk<S>
+        where S: TryStream,
+            S::Ok: Stream,
+    {
         #[pin]
         stream: S,
         #[pin]
