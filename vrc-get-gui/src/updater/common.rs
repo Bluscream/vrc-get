@@ -7,7 +7,6 @@ use serde::{Deserialize, Deserializer};
 use std::borrow::Cow;
 use std::collections::HashMap;
 use std::str::FromStr;
-use url::Url;
 
 pub static PUBLIC_KEY: &str = "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDkyMjAzMkU2Q0ZGQjQ0MjYKUldRbVJQdlA1aklna2d2NnRoM3ZsT3lzWEQ3MC9zTGpaWVR4NGdQOXR0UGJaOHBlY2xCcFY5bHcK";
 
@@ -25,7 +24,7 @@ pub fn get_updater_url(stable: bool) -> Cow<'static, str> {
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct ReleaseManifestPlatform {
-    pub url: Url,
+    pub url: String,
     pub signature: String,
     // alcom specific information
     /// Command line parameters for windows installer

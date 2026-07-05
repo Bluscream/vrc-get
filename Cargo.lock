@@ -3317,7 +3317,6 @@ dependencies = [
  "serde",
  "serde_json",
  "tempfile",
- "url",
  "windows-strings 0.5.1",
  "windows-sys 0.61.2",
  "winhttp",

@@ -414,7 +414,7 @@ impl UpdaterInformation {
         );
 
         let response = (self.client)
-            .get(self.platform.url.clone())
+            .get(&self.platform.url)
             .headers(headers)
             .send()
             .await?;
