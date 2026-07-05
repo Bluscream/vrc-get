@@ -94,6 +94,7 @@ export const PackageListCard = memo(function PackageListCard({
 		[],
 	);
 	const [showHiddenPackages, setShowHiddenPackages] = useState(false);
+	const lastSelectedPackageIdRef = useRef<string | null>(null);
 
 	const bulkUpdatePackageIds = useMemo(() => {
 		const packageIds = new Set(packageRowsData.map((p) => p.id));
@@ -101,11 +102,10 @@ export const PackageListCard = memo(function PackageListCard({
 		return bulkUpdatePackageIdsRaw.filter((pkgId) => packageIds.has(pkgId));
 	}, [packageRowsData, bulkUpdatePackageIdsRaw]);
 
-	useDocumentEvent(
-		"post-package-changes",
-		() => setBulkUpdatePackageIds([]),
-		[],
-	);
+	useDocumentEvent("post-package-changes", () => {
+		setBulkUpdatePackageIds([]);
+		lastSelectedPackageIdRef.current = null;
+	}, []);
 
 	const bulkUpdateMode = useMemo(() => {
 		const packageRowByPackageId = new Map(
@@ -149,6 +149,19 @@ export const PackageListCard = memo(function PackageListCard({
 			.length;
 	}, [hiddenPackages, filteredPackageIds]);
 
+	const visibleOrderedPackageRows = useMemo(() => {
+		const hiddenIds = new Set(hiddenPackages.map((row) => row.id));
+		const rows = packageRowsData.filter(
+			(row) => !hiddenIds.has(row.id) && filteredPackageIds.has(row.id),
+		);
+		if (showHiddenPackages) {
+			rows.push(
+				...hiddenPackages.filter((row) => filteredPackageIds.has(row.id)),
+			);
+		}
+		return rows;
+	}, [packageRowsData, hiddenPackages, filteredPackageIds, showHiddenPackages]);
+
 	const toggleShowHiddenPackages = useCallback(() => {
 		setShowHiddenPackages((prev) => !prev);
 	}, []);
@@ -167,6 +180,69 @@ export const PackageListCard = memo(function PackageListCard({
 	const removeBulkUpdatePackage = useCallback((row: PackageRowInfo) => {
 		setBulkUpdatePackageIds((prev) => prev.filter((id) => id !== row.id));
 	}, []);
+
+	const latestSelectionStateRef = useRef({
+		bulkUpdatePackageIds,
+		visibleOrderedPackageRows,
+		bulkUpdateMode,
+	});
+	latestSelectionStateRef.current = {
+		bulkUpdatePackageIds,
+		visibleOrderedPackageRows,
+		bulkUpdateMode,
+	};
+
+	const onBulkUpdateCheckboxClick = useCallback(
+		(row: PackageRowInfo, shiftKey: boolean) => {
+			const {
+				bulkUpdatePackageIds,
+				visibleOrderedPackageRows,
+				bulkUpdateMode,
+			} = latestSelectionStateRef.current;
+			const nextChecked = !bulkUpdatePackageIds.includes(row.id);
+			const anchorId = lastSelectedPackageIdRef.current;
+
+			if (shiftKey && anchorId != null) {
+				const ids = visibleOrderedPackageRows.map((r) => r.id);
+				const anchorIndex = ids.indexOf(anchorId);
+				const targetIndex = ids.indexOf(row.id);
+
+				if (anchorIndex !== -1 && targetIndex !== -1) {
+					const [start, end] =
+						anchorIndex < targetIndex
+							? [anchorIndex, targetIndex]
+							: [targetIndex, anchorIndex];
+					const rangeRows = visibleOrderedPackageRows
+						.slice(start, end + 1)
+						.filter((r) =>
+							canBulkUpdate(bulkUpdateMode, bulkUpdateModeForPackage(r)),
+						);
+
+					setBulkUpdatePackageIds((prev) => {
+						const next = new Set(prev);
+						for (const rangeRow of rangeRows) {
+							if (nextChecked) {
+								next.add(rangeRow.id);
+							} else {
+								next.delete(rangeRow.id);
+							}
+						}
+						return [...next];
+					});
+					lastSelectedPackageIdRef.current = row.id;
+					return;
+				}
+			}
+
+			if (nextChecked) {
+				addBulkUpdatePackage(row);
+			} else {
+				removeBulkUpdatePackage(row);
+			}
+			lastSelectedPackageIdRef.current = row.id;
+		},
+		[addBulkUpdatePackage, removeBulkUpdatePackage],
+	);
 
 	// Fix scroll position when bulk update card visibility is changed
 	const scrollTableOuterRef = useRef<HTMLDivElement>(null);
@@ -267,8 +343,7 @@ export const PackageListCard = memo(function PackageListCard({
 											bulkUpdateMode,
 											bulkUpdateModeForPackage(row),
 										)}
-										addBulkUpdatePackage={addBulkUpdatePackage}
-										removeBulkUpdatePackage={removeBulkUpdatePackage}
+										onBulkUpdateCheckboxClick={onBulkUpdateCheckboxClick}
 									/>
 								</tr>
 							);
@@ -311,8 +386,7 @@ export const PackageListCard = memo(function PackageListCard({
 													bulkUpdateMode,
 													bulkUpdateModeForPackage(row),
 												)}
-												addBulkUpdatePackage={addBulkUpdatePackage}
-												removeBulkUpdatePackage={removeBulkUpdatePackage}
+												onBulkUpdateCheckboxClick={onBulkUpdateCheckboxClick}
 											/>
 										</tr>
 									))}
@@ -896,14 +970,12 @@ const PackageRow = memo(function PackageRow({
 	pkg,
 	bulkUpdateSelected,
 	bulkUpdateAvailable,
-	addBulkUpdatePackage,
-	removeBulkUpdatePackage,
+	onBulkUpdateCheckboxClick,
 }: {
 	pkg: PackageRowInfo;
 	bulkUpdateSelected: boolean;
 	bulkUpdateAvailable: boolean;
-	addBulkUpdatePackage: (pkg: PackageRowInfo) => void;
-	removeBulkUpdatePackage: (pkg: PackageRowInfo) => void;
+	onBulkUpdateCheckboxClick: (pkg: PackageRowInfo, shiftKey: boolean) => void;
 }) {
 	const cellClass = "p-3.5 compact:py-1";
 	const noGrowCellClass = `${cellClass} w-1`;
@@ -939,12 +1011,8 @@ const PackageRow = memo(function PackageRow({
 		});
 	};
 
-	const onClickBulkUpdate = () => {
-		if (bulkUpdateSelected) {
-			removeBulkUpdatePackage(pkg);
-		} else {
-			addBulkUpdatePackage(pkg);
-		}
+	const onClickBulkUpdateCheckbox = (e: React.MouseEvent) => {
+		onBulkUpdateCheckboxClick(pkg, e.shiftKey);
 	};
 
 	const documentationUrl = pkg.documentationUrl
@@ -958,7 +1026,7 @@ const PackageRow = memo(function PackageRow({
 				<div className={"flex items-center justify-center aspect-square"}>
 					<CheckboxDisabledIfLoading
 						checked={bulkUpdateSelected}
-						onCheckedChange={onClickBulkUpdate}
+						onClick={onClickBulkUpdateCheckbox}
 						disabled={!bulkUpdateAvailable}
 						className="hover:before:content-none"
 					/>
