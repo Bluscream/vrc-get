@@ -26,7 +26,7 @@
     'general:button:reset': 'Réinitialiser',
     'general:button:save': 'Sauvegarder',
     'general:button:select': 'Sélectionner',
-    'general:created at': 'Ajouté',
+    'general:created at': 'Création',
     'general:dialog:select file or directory': 'Sélectionnez un fichier ou un dossier.',
     'general:dialog:select file or directory header': "Sélection d'un fichier ou d'un dossier",
     'general:error:failed to create dir': 'Impossible de créer le dossier (permissions manquantes ?) : {{err}}',
