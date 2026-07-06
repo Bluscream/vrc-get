@@ -1,4 +1,6 @@
+use crate::sign_alcom_updater::{secret_key, sign_file};
 use anyhow::*;
+use base64::Engine;
 use chrono::{Timelike, Utc};
 use indexmap::IndexMap;
 use serde::Serialize;
@@ -12,12 +14,14 @@ pub struct Command {
     assets_dir: PathBuf,
     #[clap(long = "version")]
     version: String,
+    #[clap(long = "sign")]
+    sign: bool,
     out_path: PathBuf,
 }
 
 impl crate::Command for Command {
     fn run(self) -> Result<i32> {
-        create_alcom_updater_json(&self.assets_dir, &self.version, &self.out_path)?;
+        create_alcom_updater_json(&self.assets_dir, &self.version, &self.out_path, self.sign)?;
         Ok(0)
     }
 }
@@ -37,7 +41,12 @@ struct Platform {
     args: Vec<String>,
 }
 
-pub fn create_alcom_updater_json(assets_dir: &Path, version: &str, out_path: &Path) -> Result<()> {
+pub fn create_alcom_updater_json(
+    assets_dir: &Path,
+    version: &str,
+    out_path: &Path,
+    sign: bool,
+) -> Result<()> {
     // consts
     const DOWNLOAD_URL_BASE: &str =
         "https://github.com/vrc-get/vrc-get/releases/download/gui-v{version}";
@@ -61,9 +70,23 @@ pub fn create_alcom_updater_json(assets_dir: &Path, version: &str, out_path: &Pa
 
         std::fs::metadata(assets_dir.join(&file_name)).with_context(|| file_name.clone())?;
 
-        let sig_name = format!("{file_name}.sig");
-        let signature = std::fs::read_to_string(assets_dir.join(&sig_name))
-            .with_context(|| sig_name.clone())?;
+        let signature = if sign {
+            let private_key = std::env::var("TAURI_SIGNING_PRIVATE_KEY")
+                .context("Required environment variable TAURI_SIGNING_PRIVATE_KEY")?;
+            let password = std::env::var("TAURI_SIGNING_PRIVATE_KEY_PASSWORD")
+                .context("Required environment variable TAURI_SIGNING_PRIVATE_KEY_PASSWORD")?;
+
+            let signature = sign_file(
+                &secret_key(&private_key, &password)?,
+                &assets_dir.join(&file_name),
+            )
+            .with_context(|| "failed to sign file")?;
+
+            base64::engine::general_purpose::STANDARD.encode(signature.to_string())
+        } else {
+            let sig_name = format!("{file_name}.sig");
+            std::fs::read_to_string(assets_dir.join(&sig_name)).with_context(|| sig_name.clone())?
+        };
 
         let url = format!("{base_url}/{file_name}");
         platforms.insert(
