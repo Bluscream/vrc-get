@@ -133,7 +133,6 @@ jobs:
 
   publish-to-github:
     name: Publish to GitHub
-    if: ${{ !inputs.dry-run }}
     environment:
       name: actions-github-app
       url: https://github.com/anatawa12/vrc-get/releases/online-installer-v${{ needs.pre-build.outputs.installer-version }}
@@ -168,6 +167,7 @@ jobs:
           name: online-installer
 
       - name: Push tag
+        if: ${{ !inputs.dry-run }}
         run: |-
           # set tag and publish current version
           git tag "online-installer-v$INSTALLER_VERSION"
@@ -189,13 +189,14 @@ jobs:
             ${{ needs.pre-build.outputs.prerelease && '--prerelease' || '' }} \
             --latest=false \
             --notes "ALCOM Online Installer v$INSTALLER_VERSION. Check for commit log of [online-installer](https://github.com/vrc-get/vrc-get/commits/online-installer-v$INSTALLER_VERSION/vrc-get-gui/online-installer) and [updater](https://github.com/vrc-get/vrc-get/commits/online-installer-v$INSTALLER_VERSION/vrc-get-gui/src/updater) for more details." \
-            --verify-tag "online-installer-v$INSTALLER_VERSION" \
+            ${{ case(inputs.dry-run, '--draft', '--verify-tag') }} \
+            "online-installer-v$INSTALLER_VERSION" \
             assets/online-installer.exe
 
           rm -rf outputs assets
 
       - name: prepare next release & push
-        if: ${{ !needs.pre-build.outputs.prerelease }}
+        if: ${{ !needs.pre-build.outputs.prerelease && !inputs.dry-run }}
         run: |
           get-version -t online-installer | version-next | version-set-channel - beta 0 | set-version -t online-installer
           INSTALLER_NEXT="$(get-version -t online-installer | version-stable)"
