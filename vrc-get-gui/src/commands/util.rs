@@ -76,15 +76,7 @@ pub async fn check_for_update(
     app_handle: AppHandle,
     stable: bool,
 ) -> updater::Result<Option<Update>> {
-    let endpoint = if let Ok(env) =
-        std::env::var("___ALCOM_UPDATER_URL_OVERRIDE_DEBUG_ONLY_FEATURE_YOU_SHOULD_NOT_USE_THIS___")
-    {
-        Url::parse(&env).unwrap()
-    } else if stable {
-        Url::parse("https://vrc-get.anatawa12.com/api/gui/tauri-updater.json").unwrap()
-    } else {
-        Url::parse("https://vrc-get.anatawa12.com/api/gui/tauri-updater-beta.json").unwrap()
-    };
+    let endpoint = Url::parse(&updater::common::get_updater_url(stable)).unwrap();
     updater::check_for_update(&app_handle, endpoint).await
 }
 
