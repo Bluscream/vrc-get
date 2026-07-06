@@ -3312,6 +3312,7 @@ name = "online-installer"
 version = "0.1.0"
 dependencies = [
  "base64 0.22.1",
+ "embed-manifest",
  "minisign-verify",
  "semver",
  "serde",
