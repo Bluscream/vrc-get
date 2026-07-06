@@ -1,5 +1,5 @@
 use super::{BundleContext, create_tar_gz};
-use crate::utils::make_executable;
+use crate::utils::{make_executable, target_arch};
 use anyhow::{Context, Result};
 use std::fs;
 
@@ -23,6 +23,12 @@ pub fn create_app_bundle(ctx: &BundleContext<'_>) -> Result<()> {
 
     // Copy binary.
     let src_bin = ctx.binary_path();
+
+    if !src_bin.exists() && target_arch(ctx.target_tuple) == "universal" {
+        println!("universal binary not found, building universal binary from each target binary");
+        super::super::build_alcom::lipo_universal_binary(ctx.profile)?;
+    }
+
     let dst_bin = macos_dir.join(ctx.binary_name());
     fs::copy(&src_bin, &dst_bin).with_context(|| {
         format!(
