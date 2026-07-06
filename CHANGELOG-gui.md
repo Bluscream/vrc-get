@@ -8,14 +8,29 @@ The format is based on [Keep a Changelog].
 
 ## [Unreleased]
 ### Added
+- Implement project sorting by creation date `#2941`
 
 ### Changed
+- Added "Duplicate Template" action in template row menu `#2990`
+- ALCOM / vrc-get now prevents installing VRCSDK for Unity 2022 to Unity 6000.x `#3006`
+  - This prevents installing VRCSDK to incompatible Unity.
+  - This check is not enforced error, you can ignore the error for testing purposes.
 
 ### Deprecated
 
 ### Removed
 
 ### Fixed
+- Several Linux Distributions are broken
+  - RPM was broken and unable to install because it includes several directories for bundle `#2970`
+  - AppImage did not include webkitgtk and other libraries pure KDE environment do not likely to have `#2981`
+- Panics when there is repository with no id nor url specified `#3002`
+  - We ignore such repositories instead. It's likely be a borken repository.
+- Removed the workaround for VRCDefaultWorldScene generation issue in SDK >=3.10.2, <=3.10.3 `#3005`
+  - The [upstream bug][default-scene-canny] was fixed in 3.10.4, and we continuously use the latest VRCSDK so it is no longer a problem! Thanks to VRChat team for fixing it!
+- Legacy packages that are still installed are no longer hidden in Manage Packages `#3011`
+
+[default-scene-canny]: https://feedback.vrchat.com/sdk-bug-reports/p/3102-3103-vrcscenetemplateinitializer-does-not-create-sample-scene-if-udon-prepr
 
 ### Security
 

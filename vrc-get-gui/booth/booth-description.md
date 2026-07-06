@@ -1,3 +1,5 @@
+# ALCOM - A fast open-source alternative of VRChat Creator Companion for macOS, Windows and Linux
+
 VRChat Creator Companion (VCC) の非公式代替アプリです。
 
 高速に動作するように設計されており、VCC の主要な機能を実装しています。
@@ -11,6 +13,8 @@ VCC と同じ設定を参照するので、 VCC からの移行には特に何�
 また、 VCC と共存も可能で削除することなく両方のアプリケーションを使用することができます。
 
 https://github.com/vrc-get/vrc-get で開発し、 https://vrc-get.anatawa12.com/alcom/ でリリースしているものと同一です。
+
+(悲しいかなmacOSでは mac に引っかからなかったのでこの行が追加されました)
 
 ## 注意事項
 
