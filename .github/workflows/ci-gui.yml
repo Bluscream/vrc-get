@@ -28,6 +28,10 @@ jobs:
             on: windows-latest
             bundles: setup-exe,setup-exe-zip,exe-updater
 
+          - triple: aarch64-pc-windows-msvc
+            on: windows-latest
+            bundles: setup-exe,setup-exe-zip,exe-updater
+
           - triple: universal-apple-darwin
             on: macos-26
             setup: |
@@ -38,7 +42,7 @@ jobs:
           - x86_64-unknown-linux-gnu
           #- aarch64-unknown-linux-gnu
           - x86_64-pc-windows-msvc
-          #- aarch64-pc-windows-msvc
+          - aarch64-pc-windows-msvc
           - universal-apple-darwin
 
     runs-on: ${{ matrix.on }}
