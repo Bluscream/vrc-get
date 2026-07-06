@@ -243,6 +243,15 @@ impl<'a> BundleContext<'a> {
         }
     }
 
+    /// Path to the compiled binary in the build directory.
+    pub fn binary_path_target(&self, target_tuple: &str) -> PathBuf {
+        if target_os(target_tuple) == "windows" {
+            build_dir(target_tuple, self.profile).join(format!("{}.exe", self.binary_name()))
+        } else {
+            build_dir(target_tuple, self.profile).join(self.binary_name())
+        }
+    }
+
     /// Resolved path of an icon file
     pub fn icon_path(&self, name: &str) -> PathBuf {
         let mut pathbuf = self.gui_dir.join("icons").join(name);
