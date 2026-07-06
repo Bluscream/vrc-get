@@ -140,8 +140,8 @@ jobs:
           git branch releasing
           git push -f -u origin releasing
 
-  build-rust:
-    name: Build rust
+  build-windows:
+    name: Build Windows
     environment:
       name: actions-code-signing
     strategy:
@@ -150,23 +150,6 @@ jobs:
         include:
           # note: when you changed paths for tauri updater (which are files with .sig),
           # remember keep in sync with build-updater-json
-          - name: x86_64-linux-appimage
-            triple: x86_64-unknown-linux-gnu
-            on: ubuntu-22.04
-            setup: |
-              sudo apt update && sudo apt install -y lld
-              ld.lld --version
-
-              sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
-            rustflags: "-C link-arg=-fuse-ld=lld"
-            last-bundles: appimage,appimage-updater
-            updater-bundle: bundle/appimage/ALCOM_${GUI_VERSION}_x86_64.AppImage.tar.gz
-            dist-path: |
-              bundle/appimage/ALCOM_${GUI_VERSION}_x86_64.AppImage:alcom-${GUI_VERSION}-x86_64.AppImage
-
-              bundle/appimage/ALCOM_${GUI_VERSION}_x86_64.AppImage.tar.gz:alcom-${GUI_VERSION}-x86_64.AppImage.tar.gz
-              bundle/appimage/ALCOM_${GUI_VERSION}_x86_64.AppImage.tar.gz.sig:alcom-${GUI_VERSION}-x86_64.AppImage.tar.gz.sig
-
           - name: x86_64-windows-all
             triple: x86_64-pc-windows-msvc
             on: windows-2022
@@ -178,7 +161,112 @@ jobs:
               bundle/setup/alcom-setup.exe.zip:ALCOM-${GUI_VERSION}-x86_64-setup.exe.zip
               bundle/setup/alcom-updater.exe:ALCOM-${GUI_VERSION}-x86_64-updater.exe
               bundle/setup/alcom-updater.exe.sig:ALCOM-${GUI_VERSION}-x86_64-updater.exe.sig
+        name:
+          - x86_64-windows-all
+          #- aarch64-windows-all
 
+    runs-on: ${{ matrix.on }}
+    env:
+      RUSTFLAGS: ${{ matrix.rustflags }}
+
+    needs: [ pre-build ]
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: 'releasing'
+          submodules: recursive
+      - run: rustup update stable
+      - name: Install cross-compilation tools
+        uses: taiki-e/setup-cross-toolchain-action@v1
+        if: ${{ matrix.triple != 'universal-apple-darwin' }}
+        with:
+          target: ${{ matrix.triple }}
+      - uses: Swatinem/rust-cache@v2
+        with:
+          cache-targets: false # for release build, do not cache build artifacts
+          key: release-gui # there are no elements about build result, so it's ok to share between all builds
+
+      - name: Setup
+        run: ${{ matrix.setup }}
+
+      - name: Build ALCOM binary
+        run: |
+          cargo xtask build-alcom --target ${{ matrix.triple }} --release ${{ matrix.alcom-build-options }}
+
+      - name: Sign ALCOM exe (Windows)
+        if: ${{ contains(matrix.name, 'windows') }}
+        uses: ./.github/actions/sign-windows
+        with:
+          artifact-name: alcom-exe-unsigned
+          path: target/${{ matrix.triple }}/release/ALCOM.exe
+
+          signpath-api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
+          signing-policy-slug: ${{ case(inputs.dry-run, 'test-signing', 'release-signing') }}
+          version: ${{ needs.pre-build.outputs.gui-version }}
+
+      - name: Bundle Setup exe (Windows)
+        if: ${{ contains(matrix.name, 'windows') }}
+        run: cargo xtask bundle-alcom --target ${{ matrix.triple }} --release --bundles setup-exe
+
+      - name: Sign Setup exe (Windows)
+        if: ${{ contains(matrix.name, 'windows') }}
+        uses: ./.github/actions/sign-windows
+        with:
+          artifact-name: alcom-setup-exe-unsigned
+          path: target/${{ matrix.triple }}/release/bundle/setup/alcom-setup.exe
+
+          signpath-api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
+          signing-policy-slug: ${{ case(inputs.dry-run, 'test-signing', 'release-signing') }}
+          version: ${{ needs.pre-build.outputs.gui-version }}
+
+      - name: Bundle ALCOM (${{ matrix.last-bundles }})
+        run: cargo xtask bundle-alcom --target ${{ matrix.triple }} --release --bundles ${{ matrix.last-bundles }}
+
+      - name: Sign updater artifacts (All Platforms)
+        shell: bash
+        if: ${{ matrix.updater-bundle }}
+        env:
+          GUI_VERSION: ${{ needs.pre-build.outputs.gui-version }}
+          UPDATER_BUNDLE: ${{ matrix.updater-bundle }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
+        run: |
+          UPDATER_BUNDLE="${UPDATER_BUNDLE//\$\{GUI_VERSION\}/$GUI_VERSION}"
+          cargo xtask sign-alcom-updater "target/${{ matrix.triple }}/release/${UPDATER_BUNDLE}"
+
+      - name: Move artifacts
+        if: ${{ !cancelled() }}
+        shell: bash
+        env:
+          GUI_VERSION: ${{ needs.pre-build.outputs.gui-version }}
+          DIST_PATH: ${{ matrix.dist-path }}
+        run: |-
+          mkdir artifacts
+
+          echo "$DIST_PATH" | while IFS=: read -r src dst; do
+            src="${src//\$\{GUI_VERSION\}/$GUI_VERSION}"
+            dst="${dst//\$\{GUI_VERSION\}/$GUI_VERSION}"
+            if [ -z "$dst" ]; then
+              continue
+            fi
+            printf "mv %s %s\n" "target/${{ matrix.triple }}/release/$src" "artifacts/$dst"
+            mv "target/${{ matrix.triple }}/release/$src" "artifacts/$dst"
+          done
+
+      - uses: actions/upload-artifact@v7
+        if: ${{ !cancelled() }}
+        with:
+          name: artifacts-${{ matrix.name }}
+          path: artifacts/*
+
+  build-macos:
+    name: Build macOS
+    environment:
+      name: actions-code-signing
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
           - name: universal-macos-all
             triple: universal-apple-darwin
             on: macos-26
@@ -194,10 +282,6 @@ jobs:
               bundle/macos/ALCOM.app.tar.gz.sig:ALCOM-${GUI_VERSION}-universal.app.tar.gz.sig
 
         name:
-          - x86_64-linux-appimage
-          #- aarch64-unknown-linux-musl
-          - x86_64-windows-all
-          #- aarch64-windows-all
           - universal-macos-all
 
     runs-on: ${{ matrix.on }}
@@ -243,31 +327,104 @@ jobs:
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         run: cargo xtask sign-alcom-app --target ${{ matrix.triple }}
 
-      - name: Sign ALCOM exe (Windows)
-        if: ${{ contains(matrix.name, 'windows') }}
-        uses: ./.github/actions/sign-windows
+      - name: Bundle ALCOM (${{ matrix.last-bundles }})
+        run: cargo xtask bundle-alcom --target ${{ matrix.triple }} --release --bundles ${{ matrix.last-bundles }}
+
+      - name: Sign updater artifacts (All Platforms)
+        shell: bash
+        if: ${{ matrix.updater-bundle }}
+        env:
+          GUI_VERSION: ${{ needs.pre-build.outputs.gui-version }}
+          UPDATER_BUNDLE: ${{ matrix.updater-bundle }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
+        run: |
+          UPDATER_BUNDLE="${UPDATER_BUNDLE//\$\{GUI_VERSION\}/$GUI_VERSION}"
+          cargo xtask sign-alcom-updater "target/${{ matrix.triple }}/release/${UPDATER_BUNDLE}"
+
+      - name: Move artifacts
+        if: ${{ !cancelled() }}
+        shell: bash
+        env:
+          GUI_VERSION: ${{ needs.pre-build.outputs.gui-version }}
+          DIST_PATH: ${{ matrix.dist-path }}
+        run: |-
+          mkdir artifacts
+
+          echo "$DIST_PATH" | while IFS=: read -r src dst; do
+            src="${src//\$\{GUI_VERSION\}/$GUI_VERSION}"
+            dst="${dst//\$\{GUI_VERSION\}/$GUI_VERSION}"
+            if [ -z "$dst" ]; then
+              continue
+            fi
+            printf "mv %s %s\n" "target/${{ matrix.triple }}/release/$src" "artifacts/$dst"
+            mv "target/${{ matrix.triple }}/release/$src" "artifacts/$dst"
+          done
+
+      - uses: actions/upload-artifact@v7
+        if: ${{ !cancelled() }}
         with:
-          artifact-name: alcom-exe-unsigned
-          path: target/${{ matrix.triple }}/release/ALCOM.exe
+          name: artifacts-${{ matrix.name }}
+          path: artifacts/*
 
-          signpath-api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
-          signing-policy-slug: ${{ case(inputs.dry-run, 'test-signing', 'release-signing') }}
-          version: ${{ needs.pre-build.outputs.gui-version }}
+  build-appimage:
+    name: Build Linux AppImage
+    environment:
+      name: actions-code-signing
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # note: when you changed paths for tauri updater (which are files with .sig),
+          # remember keep in sync with build-updater-json
+          - name: x86_64-linux-appimage
+            triple: x86_64-unknown-linux-gnu
+            on: ubuntu-22.04
+            setup: |
+              sudo apt update && sudo apt install -y lld
+              ld.lld --version
 
-      - name: Bundle Setup exe (Windows)
-        if: ${{ contains(matrix.name, 'windows') }}
-        run: cargo xtask bundle-alcom --target ${{ matrix.triple }} --release --bundles setup-exe
+              sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+            rustflags: "-C link-arg=-fuse-ld=lld"
+            last-bundles: appimage,appimage-updater
+            updater-bundle: bundle/appimage/ALCOM_${GUI_VERSION}_x86_64.AppImage.tar.gz
+            dist-path: |
+              bundle/appimage/ALCOM_${GUI_VERSION}_x86_64.AppImage:alcom-${GUI_VERSION}-x86_64.AppImage
 
-      - name: Sign Setup exe (Windows)
-        if: ${{ contains(matrix.name, 'windows') }}
-        uses: ./.github/actions/sign-windows
+              bundle/appimage/ALCOM_${GUI_VERSION}_x86_64.AppImage.tar.gz:alcom-${GUI_VERSION}-x86_64.AppImage.tar.gz
+              bundle/appimage/ALCOM_${GUI_VERSION}_x86_64.AppImage.tar.gz.sig:alcom-${GUI_VERSION}-x86_64.AppImage.tar.gz.sig
+
+        name:
+          - x86_64-linux-appimage
+          #- aarch64-unknown-linux-appimage
+
+    runs-on: ${{ matrix.on }}
+    env:
+      RUSTFLAGS: ${{ matrix.rustflags }}
+
+    needs: [ pre-build ]
+    steps:
+      - uses: actions/checkout@v7
         with:
-          artifact-name: alcom-setup-exe-unsigned
-          path: target/${{ matrix.triple }}/release/bundle/setup/alcom-setup.exe
+          ref: 'releasing'
+          submodules: recursive
+      - run: rustup update stable
+      - name: Install cross-compilation tools
+        uses: taiki-e/setup-cross-toolchain-action@v1
+        if: ${{ matrix.triple != 'universal-apple-darwin' }}
+        with:
+          target: ${{ matrix.triple }}
+      - uses: Swatinem/rust-cache@v2
+        with:
+          cache-targets: false # for release build, do not cache build artifacts
+          key: release-gui # there are no elements about build result, so it's ok to share between all builds
 
-          signpath-api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
-          signing-policy-slug: ${{ case(inputs.dry-run, 'test-signing', 'release-signing') }}
-          version: ${{ needs.pre-build.outputs.gui-version }}
+      - name: Setup
+        run: ${{ matrix.setup }}
+
+      - name: Build ALCOM binary
+        run: |
+          cargo xtask build-alcom --target ${{ matrix.triple }} --release ${{ matrix.alcom-build-options }}
 
       - name: Bundle ALCOM (${{ matrix.last-bundles }})
         run: cargo xtask bundle-alcom --target ${{ matrix.triple }} --release --bundles ${{ matrix.last-bundles }}
@@ -454,7 +611,7 @@ jobs:
 
   build-updater-json:
     runs-on: ubuntu-latest
-    needs: [ pre-build, build-rust ]
+    needs: [ pre-build, build-windows, build-macos, build-appimage ]
     steps:
       # use release 
       - uses: actions/checkout@v7
@@ -488,7 +645,7 @@ jobs:
     permissions:
       contents: write
     runs-on: ubuntu-latest
-    needs: [ pre-build, build-rust, build-rpm, build-deb, build-updater-json ]
+    needs: [ pre-build, build-windows, build-macos, build-appimage, build-rpm, build-deb, build-updater-json ]
     env:
       GUI_VERSION: ${{ needs.pre-build.outputs.gui-version }}
     steps:
@@ -568,7 +725,9 @@ jobs:
     runs-on: ubuntu-latest
     needs:
       - pre-build
-      - build-rust
+      - build-windows
+      - build-macos
+      - build-appimage
       - publish-to-github
     steps:
       - uses: actions/checkout@v7
