@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog].
 ## [Unreleased]
 ### Added
 - Implement project sorting by creation date `#2941`
+- Experimental aarch64 build for windows and linux `#3035`
 
 ### Changed
 - Added "Duplicate Template" action in template row menu `#2990`
