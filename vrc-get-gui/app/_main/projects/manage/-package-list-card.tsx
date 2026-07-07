@@ -112,6 +112,15 @@ export const PackageListCard = memo(function PackageListCard({
 		[],
 	);
 
+	const lastFilterInputsRef = useRef({ search, packageRowsData });
+	if (
+		lastFilterInputsRef.current.search !== search ||
+		lastFilterInputsRef.current.packageRowsData !== packageRowsData
+	) {
+		lastFilterInputsRef.current = { search, packageRowsData };
+		lastSelectedPackageIdRef.current = null;
+	}
+
 	const bulkUpdateMode = useMemo(() => {
 		const packageRowByPackageId = new Map(
 			packageRowsData.map((row) => [row.id, row]),
