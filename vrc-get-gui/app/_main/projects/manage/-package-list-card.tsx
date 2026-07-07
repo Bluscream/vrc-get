@@ -63,6 +63,7 @@ import { isFindKey, useDocumentEvent } from "@/lib/events";
 import { usePackageUpdateInProgress } from "@/lib/global-events";
 import { tc, tt } from "@/lib/i18n";
 import { toastThrownError } from "@/lib/toast";
+import { useEffectEvent } from "@/lib/use-effect-event";
 import { toVersionString } from "@/lib/version";
 import type {
 	PackageLatestInfo,
@@ -172,33 +173,8 @@ export const PackageListCard = memo(function PackageListCard({
 		setBulkUpdatePackageIds((prev) => prev.filter((id) => id !== row.id));
 	}, []);
 
-	const latestSelectionStateRef = useRef({
-		bulkUpdatePackageIds,
-		packageRowsData,
-		hiddenPackages,
-		filteredPackageIds,
-		showHiddenPackages,
-		bulkUpdateMode,
-	});
-	latestSelectionStateRef.current = {
-		bulkUpdatePackageIds,
-		packageRowsData,
-		hiddenPackages,
-		filteredPackageIds,
-		showHiddenPackages,
-		bulkUpdateMode,
-	};
-
-	const onBulkUpdateCheckboxClick = useCallback(
+	const onBulkUpdateCheckboxClick = useEffectEvent(
 		(row: PackageRowInfo, shiftKey: boolean) => {
-			const {
-				bulkUpdatePackageIds,
-				packageRowsData,
-				hiddenPackages,
-				filteredPackageIds,
-				showHiddenPackages,
-				bulkUpdateMode,
-			} = latestSelectionStateRef.current;
 			const nextChecked = !bulkUpdatePackageIds.includes(row.id);
 			const anchorId = lastSelectedPackageIdRef.current;
 
@@ -251,7 +227,6 @@ export const PackageListCard = memo(function PackageListCard({
 			}
 			lastSelectedPackageIdRef.current = row.id;
 		},
-		[addBulkUpdatePackage, removeBulkUpdatePackage],
 	);
 
 	// Fix scroll position when bulk update card visibility is changed
