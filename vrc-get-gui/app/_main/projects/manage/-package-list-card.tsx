@@ -102,10 +102,14 @@ export const PackageListCard = memo(function PackageListCard({
 		return bulkUpdatePackageIdsRaw.filter((pkgId) => packageIds.has(pkgId));
 	}, [packageRowsData, bulkUpdatePackageIdsRaw]);
 
-	useDocumentEvent("post-package-changes", () => {
-		setBulkUpdatePackageIds([]);
-		lastSelectedPackageIdRef.current = null;
-	}, []);
+	useDocumentEvent(
+		"post-package-changes",
+		() => {
+			setBulkUpdatePackageIds([]);
+			lastSelectedPackageIdRef.current = null;
+		},
+		[],
+	);
 
 	const bulkUpdateMode = useMemo(() => {
 		const packageRowByPackageId = new Map(
@@ -149,19 +153,6 @@ export const PackageListCard = memo(function PackageListCard({
 			.length;
 	}, [hiddenPackages, filteredPackageIds]);
 
-	const visibleOrderedPackageRows = useMemo(() => {
-		const hiddenIds = new Set(hiddenPackages.map((row) => row.id));
-		const rows = packageRowsData.filter(
-			(row) => !hiddenIds.has(row.id) && filteredPackageIds.has(row.id),
-		);
-		if (showHiddenPackages) {
-			rows.push(
-				...hiddenPackages.filter((row) => filteredPackageIds.has(row.id)),
-			);
-		}
-		return rows;
-	}, [packageRowsData, hiddenPackages, filteredPackageIds, showHiddenPackages]);
-
 	const toggleShowHiddenPackages = useCallback(() => {
 		setShowHiddenPackages((prev) => !prev);
 	}, []);
@@ -183,12 +174,18 @@ export const PackageListCard = memo(function PackageListCard({
 
 	const latestSelectionStateRef = useRef({
 		bulkUpdatePackageIds,
-		visibleOrderedPackageRows,
+		packageRowsData,
+		hiddenPackages,
+		filteredPackageIds,
+		showHiddenPackages,
 		bulkUpdateMode,
 	});
 	latestSelectionStateRef.current = {
 		bulkUpdatePackageIds,
-		visibleOrderedPackageRows,
+		packageRowsData,
+		hiddenPackages,
+		filteredPackageIds,
+		showHiddenPackages,
 		bulkUpdateMode,
 	};
 
@@ -196,13 +193,26 @@ export const PackageListCard = memo(function PackageListCard({
 		(row: PackageRowInfo, shiftKey: boolean) => {
 			const {
 				bulkUpdatePackageIds,
-				visibleOrderedPackageRows,
+				packageRowsData,
+				hiddenPackages,
+				filteredPackageIds,
+				showHiddenPackages,
 				bulkUpdateMode,
 			} = latestSelectionStateRef.current;
 			const nextChecked = !bulkUpdatePackageIds.includes(row.id);
 			const anchorId = lastSelectedPackageIdRef.current;
 
 			if (shiftKey && anchorId != null) {
+				const hiddenIds = new Set(hiddenPackages.map((r) => r.id));
+				const visibleOrderedPackageRows = packageRowsData.filter(
+					(r) => !hiddenIds.has(r.id) && filteredPackageIds.has(r.id),
+				);
+				if (showHiddenPackages) {
+					visibleOrderedPackageRows.push(
+						...hiddenPackages.filter((r) => filteredPackageIds.has(r.id)),
+					);
+				}
+
 				const ids = visibleOrderedPackageRows.map((r) => r.id);
 				const anchorIndex = ids.indexOf(anchorId);
 				const targetIndex = ids.indexOf(row.id);
@@ -477,9 +487,9 @@ function ManagePackagesHeading({
 		const latestKey = stable ? "stableLatest" : "latest";
 		const packagesToInstall = packageRowsData
 			.map((row) => row[latestKey])
-			.filter<PackageLatestInfo & { status: "upgradable" }>(
-				(latest) => latest.status === "upgradable",
-			);
+			.filter<
+				PackageLatestInfo & { status: "upgradable" }
+			>((latest) => latest.status === "upgradable");
 		const packages: TauriPackage[] = packagesToInstall.map(
 			(latest) => latest.pkg,
 		);
