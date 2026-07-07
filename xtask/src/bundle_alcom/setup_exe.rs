@@ -211,7 +211,11 @@ fn build_wrapper(ctx: &BundleContext<'_>, libs_dir: &Path, iss_setup: &Path) -> 
     cmd.arg("--profile").arg(ctx.profile);
 
     if let Some(target) = ctx.target {
-        cmd.arg("--target").arg(target);
+        if target_arch(target) == "universal" {
+            cmd.arg("--target").arg(replace_arch(target, "x86_64"));
+        } else {
+            cmd.arg("--target").arg(target);
+        }
     }
 
     cmd.env("RUSTFLAGS", rustflags)
