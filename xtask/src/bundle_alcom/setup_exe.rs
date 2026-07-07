@@ -1,6 +1,6 @@
 use crate::bundle_alcom::BundleContext;
 use crate::utils::command::{CommandExt, WineRunner};
-use crate::utils::{cargo, download_file_cached, replace_arch, target_abi, target_arch};
+use crate::utils::{build_dir, cargo, download_file_cached, replace_arch, target_abi, target_arch};
 use anyhow::{Context, Result, bail};
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -235,6 +235,16 @@ fn build_wrapper(ctx: &BundleContext<'_>, libs_dir: &Path, iss_setup: &Path) -> 
         .env(format!("CARGO_PROFILE_{profile_env_name}_STRIP"), "symbols");
 
     cmd.run_checked("building windows-installer-wrapper")?;
+
+    if let Some(target) = ctx.target
+        && target_arch(target) == "universal"
+    {
+        fs::copy(
+            build_dir(replace_arch(target, "x86_64").as_str(), ctx.profile).join("alcom-setup.exe"),
+            ctx.build_dir.join("alcom-setup.exe"),
+        )
+        .context("copying alcom-setup.exe to universal dir")?;
+    }
 
     Ok(ctx.build_dir.join("alcom-setup.exe"))
 }
