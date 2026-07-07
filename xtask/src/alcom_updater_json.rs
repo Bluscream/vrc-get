@@ -55,8 +55,8 @@ pub fn create_alcom_updater_json(
         ("darwin-aarch64", "ALCOM-{version}-universal.app.tar.gz"),
         ("linux-x86_64", "alcom-{version}-x86_64.AppImage.tar.gz"),
         //("linux-aarch64", "alcom-{version}-aarch64.AppImage.tar.gz"),
-        ("windows-x86_64", "ALCOM-{version}-x86_64-updater.exe"),
-        //("windows-aarch64", "ALCOM-{version}-aarch64-updater.exe"),
+        ("windows-x86_64", "ALCOM-{version}-updater.exe"),
+        ("windows-aarch64", "ALCOM-{version}-updater.exe"),
     ]
     .into_iter()
     .collect::<IndexMap<_, _>>();
