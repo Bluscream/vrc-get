@@ -270,7 +270,7 @@ jobs:
           - target-arch: amd64
             on: ubuntu-latest
           - target-arch: arm64
-            on: ubuntu-22.04-arm
+            on: ubuntu-26.04-arm
 
           # Old distributions have older tools than we need. Download tools in build process
           - pbuilder-distribution: bookworm
