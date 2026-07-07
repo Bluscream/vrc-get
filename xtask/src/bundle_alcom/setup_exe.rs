@@ -1,6 +1,6 @@
 use crate::bundle_alcom::BundleContext;
 use crate::utils::command::{CommandExt, WineRunner};
-use crate::utils::{cargo, download_file_cached, target_abi};
+use crate::utils::{build_dir, cargo, download_file_cached, replace_arch, target_abi, target_arch};
 use anyhow::{Context, Result, bail};
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -136,7 +136,6 @@ fn build_inno_setup_installer(
 ) -> Result<PathBuf> {
     let webview2 = runner.path(webview2_bootstrapper);
     let license = runner.path(&ctx.workspace_root.join("LICENSE"));
-    let app_path = runner.path(&ctx.binary_path());
     let version = ctx.version();
     let mut cmd = runner.command(iscc);
 
@@ -146,12 +145,23 @@ fn build_inno_setup_installer(
         .arg(format!("-DWebView2SetupPath={webview2}"))
         .arg(format!("-DLicensePath={license}"))
         .arg(format!("-DApplicationVersion={version}"))
-        .arg(format!("-DApplicationPath={app_path}"))
         .arg(format!("-F{}", INSTALLER_NAME))
         .arg(format!(
             "-O{}/",
             ctx.bundle_dir.join("setup/deps/iss").display()
         ));
+
+    if target_arch(ctx.target_tuple) == "universal" {
+        let x64_tuple = replace_arch(ctx.target_tuple, "x86_64");
+        let aarch64_tuple = replace_arch(ctx.target_tuple, "aarch64");
+        let app_path_x64 = runner.path(&ctx.binary_path_target(&x64_tuple));
+        let app_path_aarch64 = runner.path(&ctx.binary_path_target(&aarch64_tuple));
+        cmd.arg(format!("-DApplicationPathX64={app_path_x64}"));
+        cmd.arg(format!("-DApplicationPathArm64={app_path_aarch64}"));
+    } else {
+        let app_path = runner.path(&ctx.binary_path());
+        cmd.arg(format!("-DApplicationPath={app_path}"));
+    }
 
     cmd.run_checked("running Inno Setup compiler")?;
 
@@ -201,7 +211,11 @@ fn build_wrapper(ctx: &BundleContext<'_>, libs_dir: &Path, iss_setup: &Path) -> 
     cmd.arg("--profile").arg(ctx.profile);
 
     if let Some(target) = ctx.target {
-        cmd.arg("--target").arg(target);
+        if target_arch(target) == "universal" {
+            cmd.arg("--target").arg(replace_arch(target, "x86_64"));
+        } else {
+            cmd.arg("--target").arg(target);
+        }
     }
 
     cmd.env("RUSTFLAGS", rustflags)
@@ -221,6 +235,16 @@ fn build_wrapper(ctx: &BundleContext<'_>, libs_dir: &Path, iss_setup: &Path) -> 
         .env(format!("CARGO_PROFILE_{profile_env_name}_STRIP"), "symbols");
 
     cmd.run_checked("building windows-installer-wrapper")?;
+
+    if let Some(target) = ctx.target
+        && target_arch(target) == "universal"
+    {
+        fs::copy(
+            build_dir(replace_arch(target, "x86_64").as_str(), ctx.profile).join("alcom-setup.exe"),
+            ctx.build_dir.join("alcom-setup.exe"),
+        )
+        .context("copying alcom-setup.exe to universal dir")?;
+    }
 
     Ok(ctx.build_dir.join("alcom-setup.exe"))
 }

@@ -206,6 +206,11 @@ pub fn target_arch(target: &str) -> &str {
     target.split('-').nth(0).unwrap()
 }
 
+pub fn replace_arch(tuple: &str, arch: &str) -> String {
+    let hyphen = tuple.find('-').unwrap_or(tuple.len());
+    format!("{}{}", arch, &tuple[hyphen..])
+}
+
 pub fn target_vendor(target: &str) -> &str {
     target.split('-').nth(1).unwrap_or("unknown")
 }

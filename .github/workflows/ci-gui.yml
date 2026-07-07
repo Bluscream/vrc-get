@@ -24,7 +24,21 @@ jobs:
               sudo apt update && sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
             rustflags: "-C link-arg=-fuse-ld=lld"
 
+          - triple: aarch64-unknown-linux-gnu
+            on: ubuntu-22.04-arm
+            bundles: appimage,appimage-updater
+            setup: |
+              sudo apt update && sudo apt install -y lld
+              ld.lld --version
+
+              sudo apt update && sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+            rustflags: "-C link-arg=-fuse-ld=lld"
+
           - triple: x86_64-pc-windows-msvc
+            on: windows-latest
+            bundles: setup-exe,setup-exe-zip,exe-updater
+
+          - triple: aarch64-pc-windows-msvc
             on: windows-latest
             bundles: setup-exe,setup-exe-zip,exe-updater
 
@@ -36,9 +50,9 @@ jobs:
             bundles: app,dmg,app-updater
         triple:
           - x86_64-unknown-linux-gnu
-          #- aarch64-unknown-linux-gnu
+          - aarch64-unknown-linux-gnu
           - x86_64-pc-windows-msvc
-          #- aarch64-pc-windows-msvc
+          - aarch64-pc-windows-msvc
           - universal-apple-darwin
 
     runs-on: ${{ matrix.on }}
@@ -176,18 +190,27 @@ jobs:
         include:
           - install_rust: false
           - no_dist: false
-          - mock-env: fedora-40-x86_64
+          - mock-os: fedora-40
             install_rust: true
             no_dist: true
-        mock-env:
-          - fedora-40-x86_64
-          - fedora-rawhide-x86_64
-    runs-on: ubuntu-latest
+
+          - mock-arch: x86_64
+            on: ubuntu-latest
+          - mock-arch: aarch64
+            on: ubuntu-22.04-arm
+
+        mock-os:
+          - fedora-40
+          - fedora-rawhide
+        mock-arch:
+          - x86_64
+          - aarch64
+    runs-on: ${{ matrix.on }}
     container:
       image: 'fedora:latest'
       options: --privileged
     env:
-      MOCK_ENV: ${{ matrix.mock-env }}
+      MOCK_ENV: ${{ matrix.mock-os }}-${{ matrix.mock-arch }}
       RPMBUILD_OPTS: ${{ case(matrix.no_dist, '-D "dist %{nil}"', '') }} ${{ case(matrix.install_rust, '-D "install_rust 1"', '') }}
     steps:
       - name: Install CI dependencies
@@ -231,7 +254,7 @@ jobs:
       - name: Upload built binary
         uses: actions/upload-artifact@v7
         with:
-          name: rpm-${{ matrix.mock-env }}
+          name: rpm-${{ env.MOCK_ENV }}
           path: artifacts/*
 
   build-deb:
@@ -243,6 +266,11 @@ jobs:
           - install_nodejs: false
           - apt-components: main
           - apt-with-updates: false
+
+          - target-arch: amd64
+            on: ubuntu-latest
+          - target-arch: arm64
+            on: ubuntu-26.04-arm
 
           # Old distributions have older tools than we need. Download tools in build process
           - pbuilder-distribution: bookworm
@@ -265,6 +293,13 @@ jobs:
             apt-components: main universe
             apt-with-updates: true
             keyring: /usr/share/keyrings/ubuntu-archive-keyring.gpg
+          # Ubuntu arm64
+          - pbuilder-distribution: jammy
+            target-arch: arm64
+            mirror: http://ports.ubuntu.com/
+            apt-components: main universe
+            apt-with-updates: true
+            keyring: /usr/share/keyrings/ubuntu-archive-keyring.gpg
         # For note,
         # bookworm: libc6@2.36
         # sid: libc6@2.39 as of 2026/06/14
@@ -277,7 +312,8 @@ jobs:
           - jammy # jammy is the oldest ubuntu release with libwebkit2gtk-4.1 >= 2.41 (but requires -updates and universe)
         target-arch:
           - amd64
-    runs-on: ubuntu-latest
+          - arm64
+    runs-on: ${{ matrix.on }}
     env:
       TARGET_ARCH: ${{ matrix.target-arch }}
       PBUILDER_DISTRIBUTION: ${{ matrix.pbuilder-distribution }}
