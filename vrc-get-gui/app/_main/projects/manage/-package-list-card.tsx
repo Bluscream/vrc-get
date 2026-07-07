@@ -103,14 +103,10 @@ export const PackageListCard = memo(function PackageListCard({
 		return bulkUpdatePackageIdsRaw.filter((pkgId) => packageIds.has(pkgId));
 	}, [packageRowsData, bulkUpdatePackageIdsRaw]);
 
-	useDocumentEvent(
-		"post-package-changes",
-		() => {
-			setBulkUpdatePackageIds([]);
-			lastSelectedPackageIdRef.current = null;
-		},
-		[],
-	);
+	useDocumentEvent("post-package-changes", () => {
+		setBulkUpdatePackageIds([]);
+		lastSelectedPackageIdRef.current = null;
+	}, []);
 
 	const lastFilterInputsRef = useRef({ search, packageRowsData });
 	if (
@@ -471,9 +467,9 @@ function ManagePackagesHeading({
 		const latestKey = stable ? "stableLatest" : "latest";
 		const packagesToInstall = packageRowsData
 			.map((row) => row[latestKey])
-			.filter<
-				PackageLatestInfo & { status: "upgradable" }
-			>((latest) => latest.status === "upgradable");
+			.filter<PackageLatestInfo & { status: "upgradable" }>(
+				(latest) => latest.status === "upgradable",
+			);
 		const packages: TauriPackage[] = packagesToInstall.map(
 			(latest) => latest.pkg,
 		);
