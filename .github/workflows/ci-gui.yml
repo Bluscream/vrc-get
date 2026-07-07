@@ -313,7 +313,7 @@ jobs:
         target-arch:
           - amd64
           - arm64
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.on }}
     env:
       TARGET_ARCH: ${{ matrix.target-arch }}
       PBUILDER_DISTRIBUTION: ${{ matrix.pbuilder-distribution }}
