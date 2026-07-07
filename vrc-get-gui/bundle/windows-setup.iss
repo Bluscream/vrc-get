@@ -78,7 +78,7 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 #if Defined(ApplicationPath)
 Source: "{#ApplicationPath}"; DestDir: "{app}"; DestName: "{#MyAppExeName}"; Flags: ignoreversion
 #else
-Source: "{#ApplicationPathX64}"; DestDir: "{app}"; DestName: "{#MyAppExeName}"; Flags: ignoreversion; Check: IsX64Compatible && !IsArm64
+Source: "{#ApplicationPathX64}"; DestDir: "{app}"; DestName: "{#MyAppExeName}"; Flags: ignoreversion; Check: IsX64Compatible and not IsArm64
 Source: "{#ApplicationPathArm64}"; DestDir: "{app}"; DestName: "{#MyAppExeName}"; Flags: ignoreversion; Check: IsArm64
 #endif
 Source: "{#WebView2SetupPath}"; DestName: "MicrosoftEdgeWebView2Setup.exe"; DestDir: "{tmp}"; Flags: deleteafterinstall
