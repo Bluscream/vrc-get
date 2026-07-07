@@ -19,6 +19,9 @@ on:
       environment:
         type: string
         description: The environment to publish to.
+      send-pull-request:
+        type: boolean
+        default: true
     secrets:
       WINGET_PAT:
         required: true
@@ -54,5 +57,5 @@ jobs:
             --display-version "$env:GUI_VERSION" `
             --urls `
               "https://github.com/vrc-get/vrc-get/releases/download/gui-v$env:GUI_VERSION/ALCOM-$env:GUI_VERSION-x86_64-setup.exe" `
-            ${{ case(inputs.send-pull-request == null || inputs.send-pull-request, '--submit', '') }} `
+            ${{ case(inputs.send-pull-request, '--submit', '') }} `
             --token "$env:WINGET_PAT"
