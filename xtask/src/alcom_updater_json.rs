@@ -54,7 +54,7 @@ pub fn create_alcom_updater_json(
         ("darwin-x86_64", "ALCOM-{version}-universal.app.tar.gz"),
         ("darwin-aarch64", "ALCOM-{version}-universal.app.tar.gz"),
         ("linux-x86_64", "alcom-{version}-x86_64.AppImage.tar.gz"),
-        //("linux-aarch64", "alcom-{version}-aarch64.AppImage.tar.gz"),
+        ("linux-aarch64", "alcom-{version}-aarch64.AppImage.tar.gz"),
         ("windows-x86_64", "ALCOM-{version}-updater.exe"),
         ("windows-aarch64", "ALCOM-{version}-updater.exe"),
     ]
