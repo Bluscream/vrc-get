@@ -193,13 +193,19 @@ jobs:
           - mock-os: fedora-40
             install_rust: true
             no_dist: true
+
+          - mock-arch: x86_64
+            on: ubuntu-latest
+          - mock-arch: aarch64
+            on: ubuntu-22.04-arm
+
         mock-os:
           - fedora-40
           - fedora-rawhide
         mock-arch:
           - x86_64
           - aarch64
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.on }}
     container:
       image: 'fedora:latest'
       options: --privileged
