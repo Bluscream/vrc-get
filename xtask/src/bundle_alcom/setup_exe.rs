@@ -157,7 +157,7 @@ fn build_inno_setup_installer(
         let app_path_x64 = runner.path(&ctx.binary_path_target(&x64_tuple));
         let app_path_aarch64 = runner.path(&ctx.binary_path_target(&aarch64_tuple));
         cmd.arg(format!("-DApplicationPathX64={app_path_x64}"));
-        cmd.arg(format!("-DApplicationPathAarch64={app_path_aarch64}"));
+        cmd.arg(format!("-DApplicationPathArm64={app_path_aarch64}"));
     } else {
         let app_path = runner.path(&ctx.binary_path());
         cmd.arg(format!("-DApplicationPath={app_path}"));
