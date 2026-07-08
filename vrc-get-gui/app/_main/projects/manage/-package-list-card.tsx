@@ -18,6 +18,7 @@ import type React from "react";
 import {
 	memo,
 	useCallback,
+	useEffect,
 	useLayoutEffect,
 	useMemo,
 	useRef,
@@ -108,14 +109,11 @@ export const PackageListCard = memo(function PackageListCard({
 		lastSelectedPackageIdRef.current = null;
 	}, []);
 
-	const lastFilterInputsRef = useRef({ search, packageRowsData });
-	if (
-		lastFilterInputsRef.current.search !== search ||
-		lastFilterInputsRef.current.packageRowsData !== packageRowsData
-	) {
-		lastFilterInputsRef.current = { search, packageRowsData };
+	// biome-ignore lint/correctness/useExhaustiveDependencies(search): watched to trigger the reset, not read in the body
+	// biome-ignore lint/correctness/useExhaustiveDependencies(packageRowsData): watched to trigger the reset, not read in the body
+	useEffect(() => {
 		lastSelectedPackageIdRef.current = null;
-	}
+	}, [search, packageRowsData]);
 
 	const bulkUpdateMode = useMemo(() => {
 		const packageRowByPackageId = new Map(
