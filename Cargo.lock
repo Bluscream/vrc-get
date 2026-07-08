@@ -6222,7 +6222,7 @@ dependencies = [
 
 [[package]]
 name = "vrc-get-gui"
-version = "1.1.7-beta.2"
+version = "1.1.7-rc.0"
 dependencies = [
  "arc-swap",
  "async-compression",
