@@ -206,6 +206,16 @@ jobs:
         run: |
           cargo xtask build-alcom --target ${{ matrix.triple }} --release ${{ matrix.alcom-build-options }}
 
+      - name: Sign Setup exe (Windows)
+        uses: ./.github/actions/sign-windows
+        with:
+          artifact-name: alcom-exe-unsigned-${{ matrix.triple }}
+          path: target/${{ matrix.triple }}/release/ALCOM.exe
+
+          signpath-api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
+          signing-policy-slug: ${{ case(inputs.dry-run, 'test-signing', 'release-signing') }}
+          version: ${{ needs.pre-build.outputs.gui-version }}
+
       - name: Move artifacts
         if: ${{ !cancelled() }}
         shell: bash
