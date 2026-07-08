@@ -406,6 +406,7 @@
     "templates:tooltip:remove builtin template": "기본 제공 템플릿은 삭제할 수 없습니다.",
     "templates:tooltip:remove vcc template": "VCC 템플릿은 여기에서 삭제할 수 없습니다. 템플릿 파일을 직접 삭제해주세요.",
     "templates:menuitem:edit template": "템플릿 편집",
+    "templates:menuitem:duplicate template": "템플릿 복제",
     "templates:menuitem:export template": "템플릿 내보내기",
     "templates:tooltip:export template with unitypackage": "UnityPackage가 포함된 템플릿은 내보낼 수 없습니다.",
     "templates:menuitem:open vcc template": "VCC 템플릿 디렉토리 열기",
