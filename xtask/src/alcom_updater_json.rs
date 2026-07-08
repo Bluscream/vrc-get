@@ -2,8 +2,6 @@ use crate::sign_alcom_updater::{secret_key, sign_file};
 use anyhow::*;
 use base64::Engine;
 use chrono::{Timelike, Utc};
-use indexmap::IndexMap;
-use serde::Serialize;
 use std::path::{Path, PathBuf};
 use std::result::Result::Ok;
 
@@ -26,21 +24,6 @@ impl crate::Command for Command {
     }
 }
 
-#[derive(Serialize)]
-struct UpdaterJson<'a> {
-    version: &'a str,
-    notes: String,
-    pub_date: chrono::DateTime<Utc>,
-    platforms: IndexMap<String, Platform>,
-}
-
-#[derive(serde::Serialize)]
-struct Platform {
-    signature: String,
-    url: String,
-    args: Vec<String>,
-}
-
 pub fn create_alcom_updater_json(
     assets_dir: &Path,
     version: &str,
@@ -59,12 +42,12 @@ pub fn create_alcom_updater_json(
         ("windows-aarch64", "ALCOM-{version}-updater.exe"),
     ]
     .into_iter()
-    .collect::<IndexMap<_, _>>();
+    .collect::<Vec<_>>();
 
     let base_url = DOWNLOAD_URL_BASE.replace("{version}", version);
 
     // create platforms info
-    let mut platforms = IndexMap::new();
+    let mut platforms = serde_json::Map::new();
     for (platform, file_name) in platform_file_name {
         let file_name = file_name.replace("{version}", version);
 
@@ -91,15 +74,15 @@ pub fn create_alcom_updater_json(
         let url = format!("{base_url}/{file_name}");
         platforms.insert(
             platform.to_string(),
-            Platform {
-                signature,
-                url,
-                args: vec![],
-            },
+            serde_json::json!({
+                "signature": signature,
+                "url": url,
+                "args": [],
+            }),
         );
     }
 
-    platforms["windows-x86_64"].args = [
+    let args = [
         "/SP-",
         "/SILENT",
         "/NOICONS",
@@ -108,7 +91,9 @@ pub fn create_alcom_updater_json(
     ]
     .iter()
     .map(|x| x.to_string())
-    .collect();
+    .collect::<Vec<_>>();
+    platforms["windows-x86_64"]["args"] = args.clone().into();
+    platforms["windows-aarch64"]["args"] = args.into();
 
     let is_beta = version.contains('-');
     let notes = if is_beta {
@@ -123,12 +108,15 @@ pub fn create_alcom_updater_json(
         )
     };
 
-    let updater = UpdaterJson {
-        version,
-        notes,
-        pub_date: Utc::now().with_nanosecond(0).unwrap(),
-        platforms,
-    };
+    let updater = serde_json::json!({
+        "version": version,
+        "notes": notes,
+        "pub_date": Utc::now()
+            .with_nanosecond(0)
+            .unwrap()
+            .to_rfc3339_opts(chrono::SecondsFormat::AutoSi, true),
+        "platforms": platforms
+    });
 
     let json = serde_json::to_string_pretty(&updater)?;
     std::fs::write(out_path, json).context("write updater.json")?;
