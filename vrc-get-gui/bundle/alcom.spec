@@ -14,7 +14,6 @@ BuildRequires:  nodejs
 BuildRequires:  npm
 BuildRequires:  pkgconfig(gtk+-3.0)
 BuildRequires:  pkgconfig(webkit2gtk-4.1)
-BuildRequires:  pkgconfig(openssl)
 
 # we download rust toolchain manually when building inside mock container
 %if ! 0%{?install_rust:1}
