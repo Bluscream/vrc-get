@@ -174,31 +174,26 @@ pub(crate) struct BundleContext<'a> {
     pub target: Option<&'a str>,
     pub target_tuple: &'a str,
     pub profile: &'a str,
-    version: String,
+    version: &'static str,
 }
 
 impl<'a> BundleContext<'a> {
     pub fn new(target: Option<&'a str>, profile: &'a str) -> Result<Self> {
-        let metadata = utils::cargo::cargo_metadata();
-        let workspace_root = metadata.workspace_root.as_std_path();
+        let workspace_root = utils::cargo::workspace_root();
 
         let target_tuple = build_target(target);
         let build_dir = build_dir(target, profile);
 
         let gui_dir = workspace_root.join("vrc-get-gui");
 
-        let version = (metadata.packages.iter())
-            .find(|p| p.name == "vrc-get-gui")
-            .context("finding vrc-get-gui")?
-            .version
-            .to_string();
+        let version = utils::cargo::gui_version();
 
         let bundle_dir = build_dir.join("bundle");
 
         Ok(BundleContext {
             workspace_root,
             gui_dir,
-            host_build_dir: metadata.target_directory.as_std_path(),
+            host_build_dir: utils::cargo::target_directory(),
             build_dir,
             bundle_dir,
             target,
@@ -209,7 +204,7 @@ impl<'a> BundleContext<'a> {
     }
 
     pub fn version(&self) -> &str {
-        self.version.as_str()
+        self.version
     }
 
     /// Binary name without extension (e.g. `ALCOM`).

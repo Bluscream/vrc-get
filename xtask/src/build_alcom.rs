@@ -73,8 +73,7 @@ struct BuildConfig {
 
 impl crate::Command for Command {
     fn run(self) -> Result<i32> {
-        let metadata = crate::utils::cargo::cargo_metadata();
-        let workspace_root = metadata.workspace_root.as_std_path();
+        let workspace_root = utils::cargo::workspace_root();
 
         let target_triple = build_target(self.target.as_deref());
 
@@ -131,7 +130,7 @@ fn build_cargo(
     config: &BuildConfig,
     verbose: bool,
 ) -> Result<()> {
-    let mut cmd = ProcessCommand::new("cargo");
+    let mut cmd = utils::cargo::command();
     cmd.current_dir(workspace_root)
         .arg("build")
         .arg("-p")

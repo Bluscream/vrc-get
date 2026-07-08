@@ -4,7 +4,6 @@ use crate::utils::{build_dir, cargo, download_file_cached, replace_arch, target_
 use anyhow::{Context, Result, bail};
 use std::fs;
 use std::path::{Path, PathBuf};
-use std::process::Command as ProcessCommand;
 use zip::write::FileOptions;
 
 const WEBVIEW2_URL: &str = "https://go.microsoft.com/fwlink/?linkid=2124703";
@@ -202,7 +201,7 @@ fn build_wrapper(ctx: &BundleContext<'_>, libs_dir: &Path, iss_setup: &Path) -> 
         format!("-C link-arg=-L{}", libs_dir.display())
     };
 
-    let mut cmd = ProcessCommand::new("cargo");
+    let mut cmd = cargo::command();
     cmd.current_dir(ctx.workspace_root)
         .arg("build")
         .arg("-p")
