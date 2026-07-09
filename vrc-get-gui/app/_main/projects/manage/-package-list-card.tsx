@@ -64,7 +64,6 @@ import { isFindKey, useDocumentEvent } from "@/lib/events";
 import { usePackageUpdateInProgress } from "@/lib/global-events";
 import { tc, tt } from "@/lib/i18n";
 import { toastThrownError } from "@/lib/toast";
-import { useCallbackEvent } from "@/lib/use-callback-event";
 import { toVersionString } from "@/lib/version";
 import type {
 	PackageLatestInfo,
@@ -166,48 +165,49 @@ export const PackageListCard = memo(function PackageListCard({
 		[repositoriesInfo],
 	);
 
-	const addBulkUpdatePackage = useCallback((row: PackageRowInfo) => {
-		setBulkUpdatePackageIds((prev) => {
-			return prev.some((id) => id === row.id) ? prev : [...prev, row.id];
-		});
-	}, []);
-
-	const removeBulkUpdatePackage = useCallback((row: PackageRowInfo) => {
-		setBulkUpdatePackageIds((prev) => prev.filter((id) => id !== row.id));
-	}, []);
-
-	const onBulkUpdateCheckboxClick = useCallbackEvent(
+	const onBulkUpdateCheckboxClick = useCallback(
 		(row: PackageRowInfo, shiftKey: boolean) => {
-			const nextChecked = !bulkUpdatePackageIds.includes(row.id);
 			const anchorId = lastSelectedPackageIdRef.current;
 
-			if (shiftKey && anchorId != null) {
-				const hiddenIds = new Set(hiddenPackages.map((r) => r.id));
-				const visibleOrderedPackageRows = packageRowsData.filter(
-					(r) => !hiddenIds.has(r.id) && filteredPackageIds.has(r.id),
-				);
-				if (showHiddenPackages) {
-					visibleOrderedPackageRows.push(
-						...hiddenPackages.filter((r) => filteredPackageIds.has(r.id)),
+			setBulkUpdatePackageIds((prev) => {
+				const nextChecked = !prev.includes(row.id);
+
+				if (shiftKey && anchorId != null) {
+					const hiddenIds = new Set(hiddenPackages.map((r) => r.id));
+					const visibleOrderedPackageRows = packageRowsData.filter(
+						(r) => !hiddenIds.has(r.id) && filteredPackageIds.has(r.id),
 					);
-				}
+					if (showHiddenPackages) {
+						visibleOrderedPackageRows.push(
+							...hiddenPackages.filter((r) => filteredPackageIds.has(r.id)),
+						);
+					}
 
-				const ids = visibleOrderedPackageRows.map((r) => r.id);
-				const anchorIndex = ids.indexOf(anchorId);
-				const targetIndex = ids.indexOf(row.id);
+					const ids = visibleOrderedPackageRows.map((r) => r.id);
+					const anchorIndex = ids.indexOf(anchorId);
+					const targetIndex = ids.indexOf(row.id);
 
-				if (anchorIndex !== -1 && targetIndex !== -1) {
-					const [start, end] =
-						anchorIndex < targetIndex
-							? [anchorIndex, targetIndex]
-							: [targetIndex, anchorIndex];
-					const rangeRows = visibleOrderedPackageRows
-						.slice(start, end + 1)
-						.filter((r) =>
-							canBulkUpdate(bulkUpdateMode, bulkUpdateModeForPackage(r)),
+					if (anchorIndex !== -1 && targetIndex !== -1) {
+						const packageRowByPackageId = new Map(
+							packageRowsData.map((r) => [r.id, r]),
+						);
+						const currentBulkUpdateMode = updateModeFromPackageModes(
+							prev.flatMap((id) => {
+								const data = packageRowByPackageId.get(id);
+								return data ? [bulkUpdateModeForPackage(data)] : [];
+							}),
 						);
 
-					setBulkUpdatePackageIds((prev) => {
+						const [start, end] =
+							anchorIndex < targetIndex
+								? [anchorIndex, targetIndex]
+								: [targetIndex, anchorIndex];
+						const rangeRows = visibleOrderedPackageRows
+							.slice(start, end + 1)
+							.filter((r) =>
+								canBulkUpdate(currentBulkUpdateMode, bulkUpdateModeForPackage(r)),
+							);
+
 						const next = new Set(prev);
 						for (const rangeRow of rangeRows) {
 							if (nextChecked) {
@@ -217,19 +217,18 @@ export const PackageListCard = memo(function PackageListCard({
 							}
 						}
 						return [...next];
-					});
-					lastSelectedPackageIdRef.current = row.id;
-					return;
+					}
 				}
-			}
 
-			if (nextChecked) {
-				addBulkUpdatePackage(row);
-			} else {
-				removeBulkUpdatePackage(row);
-			}
+				if (nextChecked) {
+					return prev.some((id) => id === row.id) ? prev : [...prev, row.id];
+				}
+				return prev.filter((id) => id !== row.id);
+			});
+
 			lastSelectedPackageIdRef.current = row.id;
 		},
+		[hiddenPackages, packageRowsData, filteredPackageIds, showHiddenPackages],
 	);
 
 	// Fix scroll position when bulk update card visibility is changed
