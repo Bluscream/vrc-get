@@ -18,6 +18,7 @@ import type React from "react";
 import {
 	memo,
 	useCallback,
+	useEffect,
 	useLayoutEffect,
 	useMemo,
 	useRef,
@@ -63,6 +64,7 @@ import { isFindKey, useDocumentEvent } from "@/lib/events";
 import { usePackageUpdateInProgress } from "@/lib/global-events";
 import { tc, tt } from "@/lib/i18n";
 import { toastThrownError } from "@/lib/toast";
+import { useEffectEvent } from "@/lib/use-effect-event";
 import { toVersionString } from "@/lib/version";
 import type {
 	PackageLatestInfo,
@@ -94,6 +96,7 @@ export const PackageListCard = memo(function PackageListCard({
 		[],
 	);
 	const [showHiddenPackages, setShowHiddenPackages] = useState(false);
+	const lastSelectedPackageIdRef = useRef<string | null>(null);
 
 	const bulkUpdatePackageIds = useMemo(() => {
 		const packageIds = new Set(packageRowsData.map((p) => p.id));
@@ -101,11 +104,16 @@ export const PackageListCard = memo(function PackageListCard({
 		return bulkUpdatePackageIdsRaw.filter((pkgId) => packageIds.has(pkgId));
 	}, [packageRowsData, bulkUpdatePackageIdsRaw]);
 
-	useDocumentEvent(
-		"post-package-changes",
-		() => setBulkUpdatePackageIds([]),
-		[],
-	);
+	useDocumentEvent("post-package-changes", () => {
+		setBulkUpdatePackageIds([]);
+		lastSelectedPackageIdRef.current = null;
+	}, []);
+
+	// biome-ignore lint/correctness/useExhaustiveDependencies(search): watched to trigger the reset, not read in the body
+	// biome-ignore lint/correctness/useExhaustiveDependencies(packageRowsData): watched to trigger the reset, not read in the body
+	useEffect(() => {
+		lastSelectedPackageIdRef.current = null;
+	}, [search, packageRowsData]);
 
 	const bulkUpdateMode = useMemo(() => {
 		const packageRowByPackageId = new Map(
@@ -167,6 +175,62 @@ export const PackageListCard = memo(function PackageListCard({
 	const removeBulkUpdatePackage = useCallback((row: PackageRowInfo) => {
 		setBulkUpdatePackageIds((prev) => prev.filter((id) => id !== row.id));
 	}, []);
+
+	const onBulkUpdateCheckboxClick = useEffectEvent(
+		(row: PackageRowInfo, shiftKey: boolean) => {
+			const nextChecked = !bulkUpdatePackageIds.includes(row.id);
+			const anchorId = lastSelectedPackageIdRef.current;
+
+			if (shiftKey && anchorId != null) {
+				const hiddenIds = new Set(hiddenPackages.map((r) => r.id));
+				const visibleOrderedPackageRows = packageRowsData.filter(
+					(r) => !hiddenIds.has(r.id) && filteredPackageIds.has(r.id),
+				);
+				if (showHiddenPackages) {
+					visibleOrderedPackageRows.push(
+						...hiddenPackages.filter((r) => filteredPackageIds.has(r.id)),
+					);
+				}
+
+				const ids = visibleOrderedPackageRows.map((r) => r.id);
+				const anchorIndex = ids.indexOf(anchorId);
+				const targetIndex = ids.indexOf(row.id);
+
+				if (anchorIndex !== -1 && targetIndex !== -1) {
+					const [start, end] =
+						anchorIndex < targetIndex
+							? [anchorIndex, targetIndex]
+							: [targetIndex, anchorIndex];
+					const rangeRows = visibleOrderedPackageRows
+						.slice(start, end + 1)
+						.filter((r) =>
+							canBulkUpdate(bulkUpdateMode, bulkUpdateModeForPackage(r)),
+						);
+
+					setBulkUpdatePackageIds((prev) => {
+						const next = new Set(prev);
+						for (const rangeRow of rangeRows) {
+							if (nextChecked) {
+								next.add(rangeRow.id);
+							} else {
+								next.delete(rangeRow.id);
+							}
+						}
+						return [...next];
+					});
+					lastSelectedPackageIdRef.current = row.id;
+					return;
+				}
+			}
+
+			if (nextChecked) {
+				addBulkUpdatePackage(row);
+			} else {
+				removeBulkUpdatePackage(row);
+			}
+			lastSelectedPackageIdRef.current = row.id;
+		},
+	);
 
 	// Fix scroll position when bulk update card visibility is changed
 	const scrollTableOuterRef = useRef<HTMLDivElement>(null);
@@ -267,8 +331,7 @@ export const PackageListCard = memo(function PackageListCard({
 											bulkUpdateMode,
 											bulkUpdateModeForPackage(row),
 										)}
-										addBulkUpdatePackage={addBulkUpdatePackage}
-										removeBulkUpdatePackage={removeBulkUpdatePackage}
+										onBulkUpdateCheckboxClick={onBulkUpdateCheckboxClick}
 									/>
 								</tr>
 							);
@@ -311,8 +374,7 @@ export const PackageListCard = memo(function PackageListCard({
 													bulkUpdateMode,
 													bulkUpdateModeForPackage(row),
 												)}
-												addBulkUpdatePackage={addBulkUpdatePackage}
-												removeBulkUpdatePackage={removeBulkUpdatePackage}
+												onBulkUpdateCheckboxClick={onBulkUpdateCheckboxClick}
 											/>
 										</tr>
 									))}
@@ -896,14 +958,12 @@ const PackageRow = memo(function PackageRow({
 	pkg,
 	bulkUpdateSelected,
 	bulkUpdateAvailable,
-	addBulkUpdatePackage,
-	removeBulkUpdatePackage,
+	onBulkUpdateCheckboxClick,
 }: {
 	pkg: PackageRowInfo;
 	bulkUpdateSelected: boolean;
 	bulkUpdateAvailable: boolean;
-	addBulkUpdatePackage: (pkg: PackageRowInfo) => void;
-	removeBulkUpdatePackage: (pkg: PackageRowInfo) => void;
+	onBulkUpdateCheckboxClick: (pkg: PackageRowInfo, shiftKey: boolean) => void;
 }) {
 	const cellClass = "p-3.5 compact:py-1";
 	const noGrowCellClass = `${cellClass} w-1`;
@@ -939,12 +999,8 @@ const PackageRow = memo(function PackageRow({
 		});
 	};
 
-	const onClickBulkUpdate = () => {
-		if (bulkUpdateSelected) {
-			removeBulkUpdatePackage(pkg);
-		} else {
-			addBulkUpdatePackage(pkg);
-		}
+	const onClickBulkUpdateCheckbox = (e: React.MouseEvent) => {
+		onBulkUpdateCheckboxClick(pkg, e.shiftKey);
 	};
 
 	const documentationUrl = pkg.documentationUrl
@@ -958,7 +1014,7 @@ const PackageRow = memo(function PackageRow({
 				<div className={"flex items-center justify-center aspect-square"}>
 					<CheckboxDisabledIfLoading
 						checked={bulkUpdateSelected}
-						onCheckedChange={onClickBulkUpdate}
+						onClick={onClickBulkUpdateCheckbox}
 						disabled={!bulkUpdateAvailable}
 						className="hover:before:content-none"
 					/>

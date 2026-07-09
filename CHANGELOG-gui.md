@@ -16,6 +16,7 @@ The format is based on [Keep a Changelog].
 - ALCOM / vrc-get now prevents installing VRCSDK for Unity 2022 to Unity 6000.x `#3006`
   - This prevents installing VRCSDK to incompatible Unity.
   - This check is not enforced error, you can ignore the error for testing purposes.
+- Shift-click a package checkbox in Manage Packages to select the range between it and the last clicked package `#3030`
 
 ### Deprecated
 
