@@ -64,7 +64,7 @@ import { isFindKey, useDocumentEvent } from "@/lib/events";
 import { usePackageUpdateInProgress } from "@/lib/global-events";
 import { tc, tt } from "@/lib/i18n";
 import { toastThrownError } from "@/lib/toast";
-import { useEffectEvent } from "@/lib/use-effect-event";
+import { useCallbackEvent } from "@/lib/use-callback-event";
 import { toVersionString } from "@/lib/version";
 import type {
 	PackageLatestInfo,
@@ -176,7 +176,7 @@ export const PackageListCard = memo(function PackageListCard({
 		setBulkUpdatePackageIds((prev) => prev.filter((id) => id !== row.id));
 	}, []);
 
-	const onBulkUpdateCheckboxClick = useEffectEvent(
+	const onBulkUpdateCheckboxClick = useCallbackEvent(
 		(row: PackageRowInfo, shiftKey: boolean) => {
 			const nextChecked = !bulkUpdatePackageIds.includes(row.id);
 			const anchorId = lastSelectedPackageIdRef.current;
