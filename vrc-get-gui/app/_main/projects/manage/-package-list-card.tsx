@@ -205,7 +205,10 @@ export const PackageListCard = memo(function PackageListCard({
 						const rangeRows = visibleOrderedPackageRows
 							.slice(start, end + 1)
 							.filter((r) =>
-								canBulkUpdate(currentBulkUpdateMode, bulkUpdateModeForPackage(r)),
+								canBulkUpdate(
+									currentBulkUpdateMode,
+									bulkUpdateModeForPackage(r),
+								),
 							);
 
 						const next = new Set(prev);
