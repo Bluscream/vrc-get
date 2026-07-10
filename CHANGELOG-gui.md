@@ -8,33 +8,40 @@ The format is based on [Keep a Changelog].
 
 ## [Unreleased]
 ### Added
-- Implement project sorting by creation date `#2941`
-- Experimental aarch64 build for windows and linux `#3035`
 
 ### Changed
-- Added "Duplicate Template" action in template row menu `#2990`
-- ALCOM / vrc-get now prevents installing VRCSDK for Unity 2022 to Unity 6000.x `#3006`
-  - This prevents installing VRCSDK to incompatible Unity.
-  - This check is not enforced error, you can ignore the error for testing purposes.
-- Shift-click a package checkbox in Manage Packages to select the range between it and the last clicked package `#3030`
 
 ### Deprecated
 
 ### Removed
 
 ### Fixed
-- Several Linux Distributions are broken
-  - RPM was broken and unable to install because it includes several directories for bundle `#2970`
-  - AppImage did not include webkitgtk and other libraries pure KDE environment do not likely to have `#2981`
-- Panics when there is repository with no id nor url specified `#3002`
-  - We ignore such repositories instead. It's likely be a borken repository.
-- Removed the workaround for VRCDefaultWorldScene generation issue in SDK >=3.10.2, <=3.10.3 `#3005`
-  - The [upstream bug][default-scene-canny] was fixed in 3.10.4, and we continuously use the latest VRCSDK so it is no longer a problem! Thanks to VRChat team for fixing it!
-- Legacy packages that are still installed are no longer hidden in Manage Packages `#3011`
-
-[default-scene-canny]: https://feedback.vrchat.com/sdk-bug-reports/p/3102-3103-vrcscenetemplateinitializer-does-not-create-sample-scene-if-udon-prepr
 
 ### Security
+
+## [1.1.7] - 2026-07-10
+### Added
+- Implement project sorting by creation date [`#2941`](https://github.com/vrc-get/vrc-get/pull/2941)
+- Experimental aarch64 build for windows and linux [`#3035`](https://github.com/vrc-get/vrc-get/pull/3035)
+
+### Changed
+- Added "Duplicate Template" action in template row menu [`#2990`](https://github.com/vrc-get/vrc-get/pull/2990)
+- ALCOM / vrc-get now prevents installing VRCSDK for Unity 2022 to Unity 6000.x [`#3006`](https://github.com/vrc-get/vrc-get/pull/3006)
+  - This prevents installing VRCSDK to incompatible Unity.
+  - This check is not enforced error, you can ignore the error for testing purposes.
+- Shift-click a package checkbox in Manage Packages to select the range between it and the last clicked package [`#3030`](https://github.com/vrc-get/vrc-get/pull/3030)
+
+### Fixed
+- Several Linux Distributions are broken
+  - RPM was broken and unable to install because it includes several directories for bundle [`#2970`](https://github.com/vrc-get/vrc-get/pull/2970)
+  - AppImage did not include webkitgtk and other libraries pure KDE environment do not likely to have [`#2981`](https://github.com/vrc-get/vrc-get/pull/2981)
+- Panics when there is repository with no id nor url specified [`#3002`](https://github.com/vrc-get/vrc-get/pull/3002)
+  - We ignore such repositories instead. It's likely be a borken repository.
+- Removed the workaround for VRCDefaultWorldScene generation issue in SDK >=3.10.2, <=3.10.3 [`#3005`](https://github.com/vrc-get/vrc-get/pull/3005)
+  - The [upstream bug][default-scene-canny] was fixed in 3.10.4, and we continuously use the latest VRCSDK so it is no longer a problem! Thanks to VRChat team for fixing it!
+- Legacy packages that are still installed are no longer hidden in Manage Packages [`#3011`](https://github.com/vrc-get/vrc-get/pull/3011)
+
+[default-scene-canny]: https://feedback.vrchat.com/sdk-bug-reports/p/3102-3103-vrcscenetemplateinitializer-does-not-create-sample-scene-if-udon-prepr
 
 ## [1.1.6] - 2026-06-02
 ### Added
@@ -719,7 +726,8 @@ Release pipeline fixes
 - Apple code signing [`#422`](https://github.com/anatawa12/vrc-get/pull/422)
 - Migrate vpm 2019 project to 2022 [`#435`](https://github.com/anatawa12/vrc-get/pull/435)
 
-[Unreleased]: https://github.com/vrc-get/vrc-get/compare/gui-v1.1.6...HEAD
+[Unreleased]: https://github.com/vrc-get/vrc-get/compare/gui-v1.1.7...HEAD
+[1.1.7]: https://github.com/vrc-get/vrc-get/compare/gui-v1.1.6...gui-v1.1.7
 [1.1.6]: https://github.com/vrc-get/vrc-get/compare/gui-v1.1.5...gui-v1.1.6
 [1.1.5]: https://github.com/vrc-get/vrc-get/compare/gui-v1.1.4...gui-v1.1.5
 [1.1.4]: https://github.com/vrc-get/vrc-get/compare/gui-v1.1.3...gui-v1.1.4
