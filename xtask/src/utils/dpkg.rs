@@ -101,7 +101,7 @@ pub fn dpkg_query_search(
 
     if !matches!(output.status.code(), Some(0 | 1)) {
         return Err(io::Error::other(format!(
-            "dpkg-query returned non-zero status code: {}\n{}",
+            "dpkg-query --search returned non-zero status code: {}\n{}",
             output.status,
             String::from_utf8_lossy(&output.stderr)
         )));
@@ -141,7 +141,7 @@ pub fn dpkg_query_list_files(
 
     if !matches!(output.status.code(), Some(0 | 1)) {
         return Err(io::Error::other(format!(
-            "dpkg-query returned non-zero status code: {}\n{}",
+            "dpkg-query --listfiles returned non-zero status code: {}\n{}",
             output.status,
             String::from_utf8_lossy(&output.stderr)
         )));
@@ -265,7 +265,7 @@ pub fn apt_cache_depends(
 
     if !matches!(output.status.code(), Some(0 | 1)) {
         return Err(io::Error::other(format!(
-            "dpkg-query returned non-zero status code: {}\n{}",
+            "apt-cache returned non-zero status code: {}\n{}",
             output.status,
             String::from_utf8_lossy(&output.stderr)
         )));
