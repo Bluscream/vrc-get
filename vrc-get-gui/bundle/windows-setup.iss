@@ -177,6 +177,8 @@ var
 begin
   Result := False;
 
+  Log('Installing WebView2 since it is not installed.');
+
   ExtractTemporaryFile('MicrosoftEdgeWebView2Setup.exe');
 
   InstallerPath :=
