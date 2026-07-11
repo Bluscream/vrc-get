@@ -16,11 +16,14 @@ The format is based on [Keep a Changelog].
 ### Removed
 
 ### Fixed
-- Windows updater fails to update allusers installation `#3054`
-- Windows installer failes to install WebView2 `#3056`
-- AppImage is incompatible with Fedora `#3057`
 
 ### Security
+
+## [1.1.8] - 2026-07-11
+### Fixed
+- Windows updater fails to update allusers installation [`#3054`](https://github.com/vrc-get/vrc-get/pull/3054)
+- Windows installer failes to install WebView2 [`#3056`](https://github.com/vrc-get/vrc-get/pull/3056)
+- AppImage is incompatible with Fedora [`#3057`](https://github.com/vrc-get/vrc-get/pull/3057)
 
 ## [1.1.7] - 2026-07-10
 ### Added
@@ -729,7 +732,8 @@ Release pipeline fixes
 - Apple code signing [`#422`](https://github.com/anatawa12/vrc-get/pull/422)
 - Migrate vpm 2019 project to 2022 [`#435`](https://github.com/anatawa12/vrc-get/pull/435)
 
-[Unreleased]: https://github.com/vrc-get/vrc-get/compare/gui-v1.1.7...HEAD
+[Unreleased]: https://github.com/vrc-get/vrc-get/compare/gui-v1.1.8...HEAD
+[1.1.8]: https://github.com/vrc-get/vrc-get/compare/gui-v1.1.7...gui-v1.1.8
 [1.1.7]: https://github.com/vrc-get/vrc-get/compare/gui-v1.1.6...gui-v1.1.7
 [1.1.6]: https://github.com/vrc-get/vrc-get/compare/gui-v1.1.5...gui-v1.1.6
 [1.1.5]: https://github.com/vrc-get/vrc-get/compare/gui-v1.1.4...gui-v1.1.5
