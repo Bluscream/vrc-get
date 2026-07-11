@@ -321,7 +321,7 @@ mod list_deps {
         // include libgstreamer1.0-0
         // include libdw1
         // include libelf1
-        "libbz2-1.0",
+        // include libbz2-1.0 since fedora provides libbz2.so.1 or libbz2.so.1.0.* but not libbz2.so.1.0
         // include libunwind8
         // excluded libcap2-bin
         "libgtk-3-0",
