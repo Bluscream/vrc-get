@@ -16,6 +16,7 @@ The format is based on [Keep a Changelog].
 ### Removed
 
 ### Fixed
+- Windows updater fails to update allusers installation `#3054`
 
 ### Security
 
