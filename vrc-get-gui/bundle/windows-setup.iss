@@ -81,7 +81,7 @@ Source: "{#ApplicationPath}"; DestDir: "{app}"; DestName: "{#MyAppExeName}"; Fla
 Source: "{#ApplicationPathX64}"; DestDir: "{app}"; DestName: "{#MyAppExeName}"; Flags: ignoreversion; Check: IsX64Compatible and not IsArm64
 Source: "{#ApplicationPathArm64}"; DestDir: "{app}"; DestName: "{#MyAppExeName}"; Flags: ignoreversion; Check: IsArm64
 #endif
-Source: "{#WebView2SetupPath}"; DestName: "MicrosoftEdgeWebView2Setup.exe"; DestDir: "{tmp}"; Flags: deleteafterinstall
+Source: "{#WebView2SetupPath}"; DestName: "MicrosoftEdgeWebView2Setup.exe"; Flags: dontcopy noencryption
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Registry]
@@ -176,6 +176,10 @@ var
   ResultCode: Integer;
 begin
   Result := False;
+
+  Log('Installing WebView2 since it is not installed.');
+
+  ExtractTemporaryFile('MicrosoftEdgeWebView2Setup.exe');
 
   InstallerPath :=
     ExpandConstant('{tmp}\MicrosoftEdgeWebView2Setup.exe');
