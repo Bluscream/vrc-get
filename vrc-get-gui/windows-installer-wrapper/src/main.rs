@@ -100,7 +100,7 @@ unsafe fn create_temp_file() -> Option<StackPath> {
         }
 
         // replace extension
-        PathRenameExtensionW(temp.as_mut_ptr(), w!(".exe"));
+        PathRenameExtensionW(name.as_mut_ptr(), w!(".exe"));
 
         Some(name)
     }
