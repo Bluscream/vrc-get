@@ -320,7 +320,7 @@ export const PackageListCard = memo(function PackageListCard({
 								return null;
 							return (
 								<tr
-									className="even:bg-secondary/30 anchor-none"
+									className="[&:nth-child(even_of_:not([hidden]))]:bg-secondary/30 anchor-none"
 									hidden={!filteredPackageIds.has(row.id)}
 									key={row.id}
 								>
@@ -363,7 +363,7 @@ export const PackageListCard = memo(function PackageListCard({
 								{showHiddenPackages &&
 									hiddenPackages.map((row) => (
 										<tr
-											className="even:bg-secondary/30 anchor-none"
+											className="[&:nth-child(even_of_:not([hidden]))]:bg-secondary/30 anchor-none"
 											hidden={!filteredPackageIds.has(row.id)}
 											key={row.id}
 										>
