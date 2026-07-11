@@ -330,7 +330,7 @@ mod list_deps {
         "libharfbuzz0b",
         //
         "libstdc++6",
-        "libjpeg8",
+        // include "libjpeg8",
         "liblcms2-2", // color library
         // include libmanette-0.2-0
         // include libevdev2
