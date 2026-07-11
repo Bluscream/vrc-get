@@ -14,12 +14,12 @@ use windows_sys::w;
 
 use windows_sys::Win32::Foundation::*;
 use windows_sys::Win32::Storage::FileSystem::*;
-use windows_sys::Win32::System::Console::{GetStdHandle, STD_ERROR_HANDLE, WriteConsoleW};
+use windows_sys::Win32::System::Console::{GetStdHandle, STD_ERROR_HANDLE};
 use windows_sys::Win32::System::Environment::*;
 use windows_sys::Win32::System::Memory::*;
 use windows_sys::Win32::System::Threading::*;
 use windows_sys::Win32::UI::Shell::PathRenameExtensionW;
-use windows_sys::Win32::UI::WindowsAndMessaging::SW_HIDE;
+use windows_sys::Win32::UI::WindowsAndMessaging::{MB_OK, MessageBoxW, SW_HIDE};
 
 static INSTALLER: &[u8] = include_bytes!(env!("INSTALLER_EXE"));
 
@@ -99,8 +99,12 @@ unsafe fn create_temp_file() -> Option<StackPath> {
             return None;
         }
 
+        let mut original = name.copy();
+
         // replace extension
         PathRenameExtensionW(name.as_mut_ptr(), w!(".exe"));
+
+        MoveFileW(original.as_ptr(), name.as_ptr());
 
         Some(name)
     }
@@ -275,6 +279,12 @@ impl StackPath {
         }
     }
 
+    fn copy(&self) -> StackPath {
+        StackPath {
+            buf: self.buf.clone(),
+        }
+    }
+
     fn capacity(&self) -> u32 {
         MAX_PATH as usize as u32
     }
@@ -396,7 +406,7 @@ fn error_out(out: &WCstr) {
     unsafe {
         let stderr = GetStdHandle(STD_ERROR_HANDLE);
         let mut written = 0;
-        WriteConsoleW(stderr, out.as_ptr(), out.len() as u32, &mut written, null());
+        MessageBoxW(null_mut(), out.as_ptr(), w!("ALCOM UPDATER"), MB_OK);
     }
 }
 
