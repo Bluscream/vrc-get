@@ -210,21 +210,18 @@ begin
   Result := True;
 end;
 
-function PrepareToInstall(var NeedsRestart: Boolean): String;
-begin
-  Result := '';
-
-  if not IsWebView2Installed then
-  begin
-    if not InstallWebView2 then
-    begin
-      Result := 'Failed to install WebView2.'
-    end;
-  end;
-end;
-
 procedure CurStepChanged(CurStep: TSetupStep);
 begin
+  if CurStep = ssInstall then
+  begin
+    if not IsWebView2Installed then
+    begin
+      if not InstallWebView2 then
+      begin
+        Abort;
+      end;
+    end;
+  end;
   if CurStep = ssPostInstall then
   begin
     PostInstallNsisMigration;
