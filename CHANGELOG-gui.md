@@ -17,7 +17,8 @@ The format is based on [Keep a Changelog].
 
 ### Fixed
 - Windows updater fails to update allusers installation `#3054`
-- Windows installer failes to install WebView2 `#3054`
+- Windows installer failes to install WebView2 `#3056`
+- AppImage is incompatible with Fedora `#3057`
 
 ### Security
 

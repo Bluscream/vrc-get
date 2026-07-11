@@ -321,7 +321,7 @@ mod list_deps {
         // include libgstreamer1.0-0
         // include libdw1
         // include libelf1
-        "libbz2-1.0",
+        // include libbz2-1.0 since fedora provides libbz2.so.1 or libbz2.so.1.0.* but not libbz2.so.1.0
         // include libunwind8
         // excluded libcap2-bin
         "libgtk-3-0",
@@ -330,13 +330,12 @@ mod list_deps {
         "libharfbuzz0b",
         //
         "libstdc++6",
-        "libjpeg8",
+        // include "libjpeg8",
         "liblcms2-2", // color library
         // include libmanette-0.2-0
         // include libevdev2
         "libpango-1.0-0",
         "libpng16-16",
-        "libpng16-16t64",
         // include libseccomp2
         // include libsecret-1-0
         // exclude libsecret-common
@@ -347,7 +346,6 @@ mod list_deps {
         "libgssapi-krb5-2", // network auth
         "libnghttp2-14",
         "libpsl5",
-        "libpsl5t64",
         "libsqlite3-0",
         "libsystemd0",
         "libtasn1-6",
@@ -358,6 +356,7 @@ mod list_deps {
         // include libwebpmux3
         // include libwoff1
         // include libxslt1.1
+        "libgdk-pixbuf-2.0-0",
     ];
 
     fn is_ignored_dep(dependant: &str, dependency: &str) -> bool {
@@ -454,6 +453,12 @@ mod list_deps {
         Ok(lib_names)
     }
 
+    fn is_system_lib(pkg: &str, system_packages: &HashSet<impl Borrow<str> + Eq + Hash>) -> bool {
+        let pkg = pkg.split_once(':').unwrap_or((pkg, "")).0;
+        let pkg = pkg.strip_suffix("t64").unwrap_or(pkg);
+        system_packages.contains(pkg)
+    }
+
     pub fn collect_dependency_packages(
         entry_point: impl IntoIterator<Item = impl AsRef<str> + Clone + Eq + Hash>,
         system_packages: &HashSet<impl Borrow<str> + Eq + Hash>,
@@ -461,12 +466,7 @@ mod list_deps {
         let dpkg_arch = utils::dpkg::dpkg_architecture()?;
         let mut required_packages = entry_point
             .into_iter()
-            .filter(|pkg| !system_packages.contains(pkg.as_ref()))
-            .filter(|pkg| {
-                pkg.as_ref()
-                    .split_once(':')
-                    .is_none_or(|(pkg, _arch)| !system_packages.contains(pkg))
-            })
+            .filter(|pkg| !is_system_lib(pkg.as_ref(), system_packages))
             .unique()
             .map(|x| {
                 let pkg_name = x.as_ref();
@@ -497,11 +497,7 @@ mod list_deps {
             }
 
             let deps_of_new_required = collect_deps(&deps_map, &new_required_packages)
-                .filter(|&pkg| !system_packages.contains(pkg))
-                .filter(|pkg| {
-                    pkg.split_once(':')
-                        .is_none_or(|(pkg, _arch)| !system_packages.contains(pkg))
-                })
+                .filter(|pkg| !is_system_lib(pkg, system_packages))
                 // when we already have added to required packages we don't need to add them
                 .filter(|&pkg| !required_packages.contains(pkg))
                 .unique()
