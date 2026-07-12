@@ -815,3 +815,15 @@ jobs:
             --base master \
             --head "$BRANCH_NAME" \
             --assignee anatawa12 \
+
+  publish-to-winget:
+    name: Publish to winget
+    if: ${{ !inputs.dry-run && !needs.pre-build.outputs.prerelease }}
+    needs: [ pre-build, publish-to-github ]
+
+    uses: ./.github/workflows/publish-gui-winget.yml
+    with:
+      version: ${{ needs.pre-build.outputs.gui-version }}
+      environment: winget-pkgs
+    secrets:
+      WINGET_PAT: ${{ secrets.WINGET_PAT }}
