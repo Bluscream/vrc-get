@@ -56,6 +56,6 @@ jobs:
             --version "$env:GUI_VERSION" `
             --display-version "$env:GUI_VERSION" `
             --urls `
-              "https://github.com/vrc-get/vrc-get/releases/download/gui-v$env:GUI_VERSION/ALCOM-$env:GUI_VERSION-setup.exe" `
+              "https://github.com/vrc-get/vrc-get/releases/download/gui-v$env:GUI_VERSION/ALCOM-$env:GUI_VERSION-setup.exe|neutral" `
             ${{ case(inputs.send-pull-request, '--submit', '') }} `
             --token "$env:WINGET_PAT"
