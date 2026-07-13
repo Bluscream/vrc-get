@@ -190,6 +190,7 @@ impl PackageManifest {
 
 /// Constructing PackageJson. Especially for testing.
 impl PackageManifest {
+    #[cfg(not(r2cs))]
     pub fn new(name: impl Into<Box<str>>, version: Version) -> Self {
         Self {
             name: name.into(),
@@ -211,17 +212,20 @@ impl PackageManifest {
         }
     }
 
+    #[cfg(not(r2cs))]
     pub fn add_vpm_dependency(mut self, name: impl Into<Box<str>>, range: &str) -> Self {
         self.vpm_dependencies
             .insert(name.into(), range.parse().unwrap());
         self
     }
 
+    #[cfg(not(r2cs))]
     pub fn add_legacy_package(mut self, name: impl Into<Box<str>>) -> Self {
         self.legacy_packages.push(name.into());
         self
     }
 
+    #[cfg(not(r2cs))]
     pub fn add_legacy_folder(
         mut self,
         path: impl Into<Box<str>>,
@@ -231,6 +235,7 @@ impl PackageManifest {
         self
     }
 
+    #[cfg(not(r2cs))]
     pub fn add_legacy_file(mut self, path: impl Into<Box<str>>, guid: impl Into<Box<str>>) -> Self {
         self.legacy_files.insert(path.into(), Some(guid.into()));
         self

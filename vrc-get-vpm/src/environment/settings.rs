@@ -292,6 +292,7 @@ impl Settings {
         self.vpm.update_id(loaded)
     }
 
+    #[cfg(not(r2cs))]
     pub fn export_repositories(&self) -> String {
         let mut builder = String::new();
 
