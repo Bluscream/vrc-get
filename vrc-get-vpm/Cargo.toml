@@ -68,3 +68,5 @@ experimental-unity-management = ["vrc-get-litedb", 'dep:winreg']
 
 [lints.rust]
 unexpected_cfgs = { level = "warn", check-cfg = ['cfg(r2cs)'] }
+
+[workspace]
