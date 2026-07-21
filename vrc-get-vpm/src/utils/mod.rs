@@ -297,16 +297,6 @@ pub(crate) fn take_required<T: serde::de::DeserializeOwned>(
     }
 }
 
-pub(crate) fn take_default<T: serde::de::DeserializeOwned + Default>(
-    object: &mut Map<String, Value>,
-    key: &str,
-) -> Result<T, String> {
-    match object.remove(key) {
-        Some(value) => deserialize_value(value).map_err(|err| format!("invalid {key}: {err}")),
-        None => Ok(T::default()),
-    }
-}
-
 pub(crate) fn take_default_with<T: Default>(
     object: &mut Map<String, Value>,
     key: &str,

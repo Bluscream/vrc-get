@@ -13,7 +13,7 @@ mod vpm_manifest;
 
 use crate::unity_project::upm_manifest::UpmManifest;
 use crate::unity_project::vpm_manifest::VpmManifest;
-use crate::utils::{PathBufExt, try_load_json, try_load_json_value};
+use crate::utils::{PathBufExt, try_load_json_value};
 use crate::version::{DependencyRange, UnityVersion, Version, VersionRange};
 use crate::{PackageManifest, io};
 use futures::future::try_join;

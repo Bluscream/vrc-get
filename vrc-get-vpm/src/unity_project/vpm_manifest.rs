@@ -1,7 +1,9 @@
 use crate::io;
 use crate::io::DefaultProjectIo;
 use crate::unity_project::LockedDependencyInfo;
-use crate::utils::{SaveController, deserialize_value, expect_object, load_json_or_default, save_json};
+use crate::utils::{
+    SaveController, deserialize_value, expect_object, load_json_or_default, save_json,
+};
 use crate::version::{DependencyRange, Version, VersionRange};
 use indexmap::IndexMap;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
@@ -31,7 +33,8 @@ impl<'de> Deserialize<'de> for AsJson {
     where
         D: Deserializer<'de>,
     {
-        let mut object = expect_object(Value::deserialize(deserializer)?).map_err(serde::de::Error::custom)?;
+        let mut object =
+            expect_object(Value::deserialize(deserializer)?).map_err(serde::de::Error::custom)?;
         Ok(Self {
             dependencies: take_dependency_map(&mut object, "dependencies")
                 .map_err(serde::de::Error::custom)?,
@@ -77,7 +80,9 @@ fn take_dependency_map(
     };
     expect_object(value)?
         .into_iter()
-        .map(|(name, value)| VpmDependency::from_json_value(value).map(|dep| (name.into_boxed_str(), dep)))
+        .map(|(name, value)| {
+            VpmDependency::from_json_value(value).map(|dep| (name.into_boxed_str(), dep))
+        })
         .collect()
 }
 

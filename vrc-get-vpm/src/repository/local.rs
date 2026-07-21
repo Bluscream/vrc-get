@@ -36,8 +36,11 @@ impl LocalCachedRepository {
     pub(crate) fn from_json_value(value: Value) -> Result<Self, String> {
         let mut object = expect_object(value)?;
         let repo = RemoteRepository::parse(expect_object(
-            object.remove("repo").ok_or_else(|| "missing repo".to_owned())?,
-        )?)?;
+            object
+                .remove("repo")
+                .ok_or_else(|| "missing repo".to_owned())?,
+        )?)
+        .map_err(|err| err.to_string())?;
         let headers = take_default_with(&mut object, "headers", |value| {
             expect_object(value)?
                 .into_iter()
@@ -71,12 +74,11 @@ impl LocalCachedRepository {
                 ),
             );
         }
-        if let Some(vrc_get) = &self.vrc_get {
-            if let Value::Object(value) = vrc_get.to_json_value()
-                && !value.is_empty()
-            {
-                object.insert("vrc-get".to_owned(), Value::Object(value));
-            }
+        if let Some(vrc_get) = &self.vrc_get
+            && let Value::Object(value) = vrc_get.to_json_value()
+            && !value.is_empty()
+        {
+            object.insert("vrc-get".to_owned(), Value::Object(value));
         }
         Value::Object(object)
     }

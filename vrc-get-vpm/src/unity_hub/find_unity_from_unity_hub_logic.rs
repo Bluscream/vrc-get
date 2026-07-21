@@ -72,9 +72,10 @@ fn arch_for_dedup(arch: Option<ChipArchitecture>) -> ChipArchitecture {
 
 async fn get_custom_install_location(local_settings: &LocalSettings) -> Option<PathBuf> {
     let user_setting = local_settings
-        .load_setting_file::<String>("secondaryInstallPath.json")
+        .load_setting_file("secondaryInstallPath.json")
         .await
-        .unwrap_or(String::new());
+        .and_then(|value| value.as_str().map(str::to_owned))
+        .unwrap_or_default();
     if !user_setting.is_empty() {
         return Some(PathBuf::from(user_setting));
     }
@@ -186,7 +187,9 @@ async fn find_unity_editor_folder_in_folder(folder_path: &Path) -> Result<Vec<Pa
 }
 
 async fn load_located_editors(local_settings: &LocalSettings) -> Vec<UnityEditorInHub> {
-    let Some(Value::Object(mut editors)) = local_settings.load_setting_file("editors-v2.json").await else {
+    let Some(Value::Object(mut editors)) =
+        local_settings.load_setting_file("editors-v2.json").await
+    else {
         return Vec::new();
     };
     let data = editors
@@ -200,13 +203,20 @@ async fn load_located_editors(local_settings: &LocalSettings) -> Vec<UnityEditor
         let Value::Object(mut editor) = editor else {
             continue;
         };
-        let Some(version) = editor.remove("version").and_then(|value| value.as_str().map(str::to_owned)) else {
+        let Some(version) = editor
+            .remove("version")
+            .and_then(|value| value.as_str().map(str::to_owned))
+        else {
             continue;
         };
         let Some(version) = UnityVersion::parse(&version) else {
             continue;
         };
-        let architecture = match editor.remove("architecture").and_then(|value| value.as_str().map(str::to_owned)).as_deref() {
+        let architecture = match editor
+            .remove("architecture")
+            .and_then(|value| value.as_str().map(str::to_owned))
+            .as_deref()
+        {
             Some("x86_64") | None => Some(ChipArchitecture::X86_64),
             Some("arm64") => Some(ChipArchitecture::ARM64),
             _ => None,
@@ -217,7 +227,7 @@ async fn load_located_editors(local_settings: &LocalSettings) -> Vec<UnityEditor
                 locations
                     .into_iter()
                     .filter_map(|value| value.as_str().map(str::to_owned))
-                    .collect(),
+                    .collect::<Vec<_>>(),
             ),
             _ => continue,
         };
@@ -265,9 +275,9 @@ impl LocalSettings {
         macro_rules! load {
             ($expr: expr) => {{
                 if let Some(Value::Object(mut settings)) = $expr {
-                    if let Some(machine_wide_secondary_install_location) =
-                        settings.remove("machineWideSecondaryInstallLocation")
-                            .and_then(|value| value.as_str().map(PathBuf::from))
+                    if let Some(machine_wide_secondary_install_location) = settings
+                        .remove("machineWideSecondaryInstallLocation")
+                        .and_then(|value| value.as_str().map(PathBuf::from))
                     {
                         result.machine_wide_install_location =
                             Some(machine_wide_secondary_install_location);

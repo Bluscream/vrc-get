@@ -161,24 +161,19 @@ impl PackageManifest {
             version: take_required(&mut object, "version")?,
             display_name: object
                 .remove("displayName")
-                .map(|value| soft_value(value, deserialize_value::<Option<Box<str>>>))
-                .flatten(),
+                .and_then(|value| soft_value(value, deserialize_value::<Option<Box<str>>>)),
             description: object
                 .remove("description")
-                .map(|value| soft_value(value, deserialize_value::<Option<Box<str>>>))
-                .flatten(),
-            unity: object
-                .remove("unity")
-                .map(|value| soft_value(value, deserialize_value::<Option<PartialUnityVersion>>))
-                .flatten(),
+                .and_then(|value| soft_value(value, deserialize_value::<Option<Box<str>>>)),
+            unity: object.remove("unity").and_then(|value| {
+                soft_value(value, deserialize_value::<Option<PartialUnityVersion>>)
+            }),
             url: object
                 .remove("url")
-                .map(|value| soft_value(value, parse_optional_url))
-                .flatten(),
+                .and_then(|value| soft_value(value, parse_optional_url)),
             zip_sha_256: object
                 .remove("zipSHA256")
-                .map(|value| soft_value(value, deserialize_value::<Option<Box<str>>>))
-                .flatten(),
+                .and_then(|value| soft_value(value, deserialize_value::<Option<Box<str>>>)),
             vpm_dependencies: object
                 .remove("vpmDependencies")
                 .map(|value| soft_value(value, parse_default_index_map::<VersionRange>))
@@ -201,12 +196,10 @@ impl PackageManifest {
                 .unwrap_or_default(),
             changelog_url: object
                 .remove("changelogUrl")
-                .map(|value| soft_value(value, parse_optional_url))
-                .flatten(),
+                .and_then(|value| soft_value(value, parse_optional_url)),
             documentation_url: object
                 .remove("documentationUrl")
-                .map(|value| soft_value(value, parse_optional_url))
-                .flatten(),
+                .and_then(|value| soft_value(value, parse_optional_url)),
             keywords: object
                 .remove("keywords")
                 .map(|value| soft_value(value, parse_default_vec::<Box<str>>))

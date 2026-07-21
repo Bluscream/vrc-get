@@ -39,24 +39,33 @@ impl<'de> Deserialize<'de> for AsJson {
     where
         D: Deserializer<'de>,
     {
-        let mut object = expect_object(Value::deserialize(deserializer)?).map_err(serde::de::Error::custom)?;
+        let mut object =
+            expect_object(Value::deserialize(deserializer)?).map_err(serde::de::Error::custom)?;
         Ok(Self {
-            path_to_unity_exe: take_box_str(&mut object, "pathToUnityExe").map_err(serde::de::Error::custom)?,
-            path_to_unity_hub: take_box_str(&mut object, "pathToUnityHub").map_err(serde::de::Error::custom)?,
-            user_projects: take_optional_value(&mut object, "userProjects").map_err(serde::de::Error::custom)?,
-            unity_editors: take_vec(&mut object, "unityEditors").map_err(serde::de::Error::custom)?,
+            path_to_unity_exe: take_box_str(&mut object, "pathToUnityExe")
+                .map_err(serde::de::Error::custom)?,
+            path_to_unity_hub: take_box_str(&mut object, "pathToUnityHub")
+                .map_err(serde::de::Error::custom)?,
+            user_projects: take_optional_value(&mut object, "userProjects")
+                .map_err(serde::de::Error::custom)?,
+            unity_editors: take_vec(&mut object, "unityEditors")
+                .map_err(serde::de::Error::custom)?,
             preferred_unity_editors: take_map(&mut object, "preferredUnityEditors")
                 .map_err(serde::de::Error::custom)?,
             default_project_path: take_optional_value(&mut object, "defaultProjectPath")
                 .map_err(serde::de::Error::custom)?,
-            last_ui_state: take_value(&mut object, "lastUIState").map_err(serde::de::Error::custom)?,
+            last_ui_state: take_value(&mut object, "lastUIState")
+                .map_err(serde::de::Error::custom)?,
             skip_unity_auto_find: take_value(&mut object, "skipUnityAutoFind")
                 .map_err(serde::de::Error::custom)?,
             user_package_folders: take_vec(&mut object, "userPackageFolders")
                 .map_err(serde::de::Error::custom)?,
-            window_size_data: take_map(&mut object, "windowSizeData").map_err(serde::de::Error::custom)?,
-            skip_requirements: take_value(&mut object, "skipRequirements").map_err(serde::de::Error::custom)?,
-            last_news_update: take_box_str(&mut object, "lastNewsUpdate").map_err(serde::de::Error::custom)?,
+            window_size_data: take_map(&mut object, "windowSizeData")
+                .map_err(serde::de::Error::custom)?,
+            skip_requirements: take_value(&mut object, "skipRequirements")
+                .map_err(serde::de::Error::custom)?,
+            last_news_update: take_box_str(&mut object, "lastNewsUpdate")
+                .map_err(serde::de::Error::custom)?,
             allow_pii: take_value(&mut object, "allowPii").map_err(serde::de::Error::custom)?,
             project_backup_path: take_optional_value(&mut object, "projectBackupPath")
                 .map_err(serde::de::Error::custom)?,

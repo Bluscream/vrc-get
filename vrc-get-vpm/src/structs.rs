@@ -4,7 +4,7 @@ pub mod setting {
     use indexmap::IndexMap;
     use serde::{Deserialize, Deserializer, Serialize, Serializer};
     use serde_json::{Map, Value};
-    use std::path::Path;
+    use std::path::{Path, PathBuf};
     use url::Url;
 
     #[derive(Debug, Clone)]
@@ -52,7 +52,7 @@ pub mod setting {
                     .ok_or_else(|| "missing localPath".to_owned())?,
             )?;
             Ok(Self {
-                local_path: local_path.into(),
+                local_path: PathBuf::from(local_path.as_ref()).into_boxed_path(),
                 name: take_optional(&mut object, "name")?,
                 url: match object.remove("url") {
                     Some(value) => parse_optional_url(value)?,

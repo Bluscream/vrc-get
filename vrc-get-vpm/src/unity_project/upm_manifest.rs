@@ -1,6 +1,8 @@
 use crate::io;
 use crate::io::DefaultProjectIo;
-use crate::utils::{JsonMapExt, SaveController, deserialize_value, expect_object, load_json_or_default, save_json};
+use crate::utils::{
+    JsonMapExt, SaveController, deserialize_value, expect_object, load_json_or_default, save_json,
+};
 use crate::version::Version;
 use serde::de::Error;
 use serde::{Deserialize, Deserializer, Serialize};
@@ -97,7 +99,8 @@ impl Parsed {
             Some(value) => expect_object(value)?
                 .into_iter()
                 .map(|(name, value)| {
-                    deserialize_value::<UpmDependency>(value).map(|dep| (name.into_boxed_str(), dep))
+                    deserialize_value::<UpmDependency>(value)
+                        .map(|dep| (name.into_boxed_str(), dep))
                 })
                 .collect::<Result<HashMap<_, _>, _>>()?,
             None => HashMap::new(),

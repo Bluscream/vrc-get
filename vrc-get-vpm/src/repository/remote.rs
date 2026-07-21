@@ -9,6 +9,7 @@ use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use serde_json::{Map, Value};
 use std::collections::HashMap;
 use std::pin::pin;
+use std::str::FromStr;
 use url::Url;
 
 type JsonMap = Map<String, Value>;
@@ -186,7 +187,9 @@ fn take_packages(object: &mut JsonMap) -> Result<IndexMap<Box<str>, RemotePackag
     let packages = expect_object(value)?;
     packages
         .into_iter()
-        .map(|(name, value)| parse_remote_package(&name, value).map(|pkg| (name.into_boxed_str(), pkg)))
+        .map(|(name, value)| {
+            parse_remote_package(&name, value).map(|pkg| (name.into_boxed_str(), pkg))
+        })
         .collect()
 }
 
@@ -203,13 +206,18 @@ fn parse_versions(name: &str, value: Value) -> Result<HashMap<Version, PackageMa
     let versions = expect_object(value)?;
     let mut parsed = HashMap::new();
     for (version, value) in versions {
-        let version = Version::parse(&version).ok_or_else(|| format!("invalid version {version}"))?;
+        let version =
+            Version::from_str(&version).map_err(|_| format!("invalid version {version}"))?;
         match PackageManifest::from_json_value(value) {
             Ok(manifest) => {
                 parsed.insert(version, manifest);
             }
             Err(err) => {
-                log::warn!("Error deserializing package manifest for {}@{}: {err}", name, version);
+                log::warn!(
+                    "Error deserializing package manifest for {}@{}: {err}",
+                    name,
+                    version
+                );
             }
         }
     }

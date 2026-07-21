@@ -74,7 +74,7 @@ impl FromStr for DependencyRange {
     type Err = ParseVersionError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        VersionRange::from_str(s).map(DependencyRange::from_version_range)
+        VersionRange::from_str(s).map(DependencyRange)
     }
 }
 

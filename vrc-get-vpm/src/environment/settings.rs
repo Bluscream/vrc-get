@@ -10,7 +10,7 @@ use crate::environment::vrc_get_settings::VrcGetSettings;
 use crate::environment::{AddUserPackageResult, PackageCollection};
 use crate::io::DefaultEnvironmentIo;
 use crate::repository::RemoteRepository;
-use crate::utils::{normalize_path, try_load_json, try_load_json_value};
+use crate::utils::{normalize_path, try_load_json_value};
 use crate::{PackageManifest, UserRepoSetting, io};
 
 #[derive(Debug, Clone)]
@@ -165,12 +165,12 @@ impl Settings {
             }
         }
 
-        match try_load_json_value(io, &pkg_path.join("package.json")).await {
-            Ok(Some(value)) if PackageManifest::from_loose_json_value(value).is_ok() => {}
-            _ => {
-                return AddUserPackageResult::BadPackage;
-            }
+        let Ok(Some(value)) = try_load_json_value(io, &pkg_path.join("package.json")).await else {
+            return AddUserPackageResult::BadPackage;
         };
+        if PackageManifest::from_loose_json_value(value).is_err() {
+            return AddUserPackageResult::BadPackage;
+        }
 
         self.vpm.add_user_package_folder(pkg_path.to_owned());
 
