@@ -10,6 +10,8 @@ The format is based on [Keep a Changelog].
 ### Added
 
 ### Changed
+- Softened `vrc-get-vpm` JSON serialization/deserialization and removed serde feature coupling from its manifest and settings parsing
+  - `vrc-get-vpm` now routes these JSON reads/writes through `serde_json::Value`
 
 ### Deprecated
 
