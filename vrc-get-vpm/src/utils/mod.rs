@@ -16,9 +16,8 @@ use futures::stream::FuturesUnordered;
 use indexmap::IndexMap;
 use pin_project_lite::pin_project;
 pub(crate) use save_controller::SaveController;
-use serde::Serialize;
-use serde_json::error::Category;
 use serde_json::{Map, Value};
+use serde_json::error::Category;
 pub(crate) use sha256_async_write::Sha256AsyncWrite;
 use std::error::Error;
 use std::path::{Component, Path, PathBuf};
@@ -348,22 +347,6 @@ pub(crate) async fn read_to_end(mut file: impl AsyncRead + Unpin) -> io::Result<
     Ok(vec)
 }
 
-pub(crate) fn parse_json_file<T: serde::de::DeserializeOwned>(
-    mut slice: &[u8],
-    path: &Path,
-) -> io::Result<T> {
-    slice = slice.strip_prefix(b"\xEF\xBB\xBF").unwrap_or(slice);
-
-    let mut deserializer = serde_json::Deserializer::from_slice(slice);
-    match serde_path_to_error::deserialize(&mut deserializer) {
-        Ok(loaded) => Ok(loaded),
-        Err(e) => Err(io::Error::new(
-            io::ErrorKind::InvalidData,
-            format!("syntax error loading {}: {e}", path.display()),
-        )),
-    }
-}
-
 pub(crate) fn parse_json_file_as_value(mut slice: &[u8], path: &Path) -> io::Result<Value> {
     slice = slice.strip_prefix(b"\xEF\xBB\xBF").unwrap_or(slice);
     serde_json::from_slice(slice).map_err(|e| {
@@ -380,20 +363,6 @@ fn is_blank(buf: &[u8]) -> bool {
     buf.is_empty() || buf.iter().all(|&b| matches!(b, b' ' | 0))
 }
 
-pub(crate) async fn try_load_json<T: serde::de::DeserializeOwned>(
-    io: &impl IoTrait,
-    path: &Path,
-) -> io::Result<Option<T>> {
-    match io.open(path).await {
-        Ok(file) => match read_to_end(file).await? {
-            vec if is_blank(&vec) => Ok(None),
-            vec => Ok(Some(parse_json_file(&vec, path)?)),
-        },
-        Err(ref e) if e.kind() == io::ErrorKind::NotFound => Ok(None),
-        Err(e) => Err(e),
-    }
-}
-
 pub(crate) async fn try_load_json_value(
     io: &impl IoTrait,
     path: &Path,
@@ -406,13 +375,6 @@ pub(crate) async fn try_load_json_value(
         Err(ref e) if e.kind() == io::ErrorKind::NotFound => Ok(None),
         Err(e) => Err(e),
     }
-}
-
-pub(crate) async fn load_json_or_default<T>(io: &impl IoTrait, path: &Path) -> io::Result<T>
-where
-    T: serde::de::DeserializeOwned + Default,
-{
-    try_load_json(io, path).await.map(|x| x.unwrap_or_default())
 }
 
 pub(crate) fn normalize_path(input: &Path) -> PathBuf {
@@ -447,10 +409,10 @@ pub(crate) fn check_absolute_path(path: impl AsRef<Path>) -> io::Result<()> {
 pub(crate) async fn save_json(
     io: &impl IoTrait,
     path: &Path,
-    data: &impl Serialize,
+    data: &Value,
 ) -> io::Result<()> {
     io.create_dir_all(path.parent().unwrap_or("".as_ref()))
         .await?;
-    io.write_atomic(path, &to_vec_pretty_os_eol(&data)?).await?;
+    io.write_atomic(path, &to_vec_pretty_os_eol(data)?).await?;
     Ok(())
 }

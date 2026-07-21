@@ -1,8 +1,7 @@
 use crate::io;
 use crate::io::{DefaultEnvironmentIo, IoTrait};
 use crate::utils::{deserialize_value, parse_json_file_as_value, read_to_end};
-use serde::{Deserialize, Deserializer, Serialize, Serializer};
-use serde_json::{Map, Value};
+use serde_json::Value;
 
 /// since this file is vrc-get specific, additional keys can be removed
 #[derive(Debug, Default, Clone)]
@@ -11,46 +10,23 @@ struct AsJson {
     ignore_curated_repository: bool,
 }
 
-impl<'de> Deserialize<'de> for AsJson {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        let Value::Object(mut object) = Value::deserialize(deserializer)? else {
-            return Err(serde::de::Error::custom("expected object"));
+impl AsJson {
+    fn from_json_value(value: Value) -> Result<Self, String> {
+        let Value::Object(mut object) = value else {
+            return Err("expected object".into());
         };
         Ok(Self {
             ignore_official_repository: object
                 .remove("ignoreOfficialRepository")
                 .map(deserialize_value::<bool>)
-                .transpose()
-                .map_err(serde::de::Error::custom)?
+                .transpose()?
                 .unwrap_or(false),
             ignore_curated_repository: object
                 .remove("ignoreCuratedRepository")
                 .map(deserialize_value::<bool>)
-                .transpose()
-                .map_err(serde::de::Error::custom)?
+                .transpose()?
                 .unwrap_or(false),
         })
-    }
-}
-
-impl Serialize for AsJson {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        let mut object = Map::new();
-        object.insert(
-            "ignoreOfficialRepository".to_owned(),
-            Value::Bool(self.ignore_official_repository),
-        );
-        object.insert(
-            "ignoreCuratedRepository".to_owned(),
-            Value::Bool(self.ignore_curated_repository),
-        );
-        Value::Object(object).serialize(serializer)
     }
 }
 
@@ -69,7 +45,7 @@ impl VrcGetSettings {
                 vec => {
                     log::warn!("vrc-get specific settings file is experimental feature!");
                     let value = parse_json_file_as_value(&vec, JSON_PATH.as_ref())?;
-                    deserialize_value(value).map_err(|err| {
+                    AsJson::from_json_value(value).map_err(|err| {
                         io::Error::new(
                             io::ErrorKind::InvalidData,
                             format!("syntax error loading {}: {err}", JSON_PATH),

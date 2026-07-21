@@ -2,8 +2,7 @@ use crate::UserRepoSetting;
 use crate::environment::PackageCollection;
 use crate::io;
 use crate::io::DefaultEnvironmentIo;
-use crate::utils::{deserialize_value, expect_object, save_json, try_load_json};
-use serde::{Deserialize, Deserializer, Serialize, Serializer};
+use crate::utils::{deserialize_value, expect_object, save_json, try_load_json_value};
 use serde_json::{Map, Number, Value};
 use std::path::{Path, PathBuf};
 
@@ -12,9 +11,29 @@ use std::path::{Path, PathBuf};
 struct AsJson {
     path_to_unity_exe: Box<str>,
     path_to_unity_hub: Box<str>,
+    // The current VPM toolchain has two places of storing user projects: `settings.json` and `vcc.litedb`.
+    // Currently, `settings.json` is the single source of truth, and VCC will always copy
+    // information of `settings.json` to `vcc.litedb`.
+    //
+    // However, it's announced that future VCC will remove copying `settings.json` to `vcc.litedb`.
+    // There's no detailed documentation on how `settings.json` would be when migration removal becomes true.
+    // However, we can assume the `userProjects` key will be absent from `settings.json` and `vcc.litedb` become
+    // the single source of truth (opposite to current `settings.json`).
+    //
+    // To support reading the settings.json for both versions and writing for both versions
+    // 1) vrc-get will skip copying the data from 'userProjects' to vcc.litedb if 'userProjects' is absent,
+    //      for future VCC compatibility
+    // 2) vrc-get will always emit 'userProjects' key even if 'userProjects' is absent.
+    //    The future VCC will just remove 'userProjects' so this should not cause a problem,
+    //       and older VCC will become compatible since 'userProjects' can become single source of truth
+    //
+    // See https://github.com/vrchat-community/creator-companion/issues/400#issuecomment-1855484391
+    // See https://vcc.docs.vrchat.com/news/release-2.2.0/#important-notes-for-tool-developers
     user_projects: Option<Vec<Box<str>>>,
     unity_editors: Vec<Box<str>>,
     preferred_unity_editors: JsonObject,
+    // In the current VCC, this path will be reset to default if it's null
+    // and vrc-get prefers another path the VCC's one so keep null if not set
     default_project_path: Option<Box<str>>,
     last_ui_state: i64,
     skip_unity_auto_find: bool,
@@ -23,6 +42,8 @@ struct AsJson {
     skip_requirements: bool,
     last_news_update: Box<str>,
     allow_pii: bool,
+    // In the current VCC, this path will be reset to default if it's null
+    // and vrc-get prefers another path the VCC's one so keep null if not set
     project_backup_path: Option<Box<str>>,
     show_prerelease_packages: bool,
     track_community_repos: bool,
@@ -34,60 +55,34 @@ struct AsJson {
 
 type JsonObject = Map<String, Value>;
 
-impl<'de> Deserialize<'de> for AsJson {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        let mut object =
-            expect_object(Value::deserialize(deserializer)?).map_err(serde::de::Error::custom)?;
+impl AsJson {
+    fn from_json_value(value: Value) -> Result<Self, String> {
+        let mut object = expect_object(value)?;
         Ok(Self {
-            path_to_unity_exe: take_box_str(&mut object, "pathToUnityExe")
-                .map_err(serde::de::Error::custom)?,
-            path_to_unity_hub: take_box_str(&mut object, "pathToUnityHub")
-                .map_err(serde::de::Error::custom)?,
-            user_projects: take_optional_value(&mut object, "userProjects")
-                .map_err(serde::de::Error::custom)?,
-            unity_editors: take_vec(&mut object, "unityEditors")
-                .map_err(serde::de::Error::custom)?,
-            preferred_unity_editors: take_map(&mut object, "preferredUnityEditors")
-                .map_err(serde::de::Error::custom)?,
-            default_project_path: take_optional_value(&mut object, "defaultProjectPath")
-                .map_err(serde::de::Error::custom)?,
-            last_ui_state: take_value(&mut object, "lastUIState")
-                .map_err(serde::de::Error::custom)?,
-            skip_unity_auto_find: take_value(&mut object, "skipUnityAutoFind")
-                .map_err(serde::de::Error::custom)?,
-            user_package_folders: take_vec(&mut object, "userPackageFolders")
-                .map_err(serde::de::Error::custom)?,
-            window_size_data: take_map(&mut object, "windowSizeData")
-                .map_err(serde::de::Error::custom)?,
-            skip_requirements: take_value(&mut object, "skipRequirements")
-                .map_err(serde::de::Error::custom)?,
-            last_news_update: take_box_str(&mut object, "lastNewsUpdate")
-                .map_err(serde::de::Error::custom)?,
-            allow_pii: take_value(&mut object, "allowPii").map_err(serde::de::Error::custom)?,
-            project_backup_path: take_optional_value(&mut object, "projectBackupPath")
-                .map_err(serde::de::Error::custom)?,
-            show_prerelease_packages: take_value(&mut object, "showPrereleasePackages")
-                .map_err(serde::de::Error::custom)?,
-            track_community_repos: take_value(&mut object, "trackCommunityRepos")
-                .map_err(serde::de::Error::custom)?,
-            selected_providers: take_value(&mut object, "selectedProviders")
-                .map_err(serde::de::Error::custom)?,
-            last_selected_project: take_box_str(&mut object, "lastSelectedProject")
-                .map_err(serde::de::Error::custom)?,
-            user_repos: take_vec(&mut object, "userRepos").map_err(serde::de::Error::custom)?,
+            path_to_unity_exe: take_box_str(&mut object, "pathToUnityExe")?,
+            path_to_unity_hub: take_box_str(&mut object, "pathToUnityHub")?,
+            user_projects: take_optional_value(&mut object, "userProjects")?,
+            unity_editors: take_vec(&mut object, "unityEditors")?,
+            preferred_unity_editors: take_map(&mut object, "preferredUnityEditors")?,
+            default_project_path: take_optional_value(&mut object, "defaultProjectPath")?,
+            last_ui_state: take_value(&mut object, "lastUIState")?,
+            skip_unity_auto_find: take_value(&mut object, "skipUnityAutoFind")?,
+            user_package_folders: take_vec(&mut object, "userPackageFolders")?,
+            window_size_data: take_map(&mut object, "windowSizeData")?,
+            skip_requirements: take_value(&mut object, "skipRequirements")?,
+            last_news_update: take_box_str(&mut object, "lastNewsUpdate")?,
+            allow_pii: take_value(&mut object, "allowPii")?,
+            project_backup_path: take_optional_value(&mut object, "projectBackupPath")?,
+            show_prerelease_packages: take_value(&mut object, "showPrereleasePackages")?,
+            track_community_repos: take_value(&mut object, "trackCommunityRepos")?,
+            selected_providers: take_value(&mut object, "selectedProviders")?,
+            last_selected_project: take_box_str(&mut object, "lastSelectedProject")?,
+            user_repos: take_user_repos(&mut object, "userRepos")?,
             rest: object,
         })
     }
-}
 
-impl Serialize for AsJson {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
+    fn to_json_value(&self) -> Value {
         let mut object = self.rest.clone();
         object.insert(
             "pathToUnityExe".to_owned(),
@@ -100,14 +95,14 @@ impl Serialize for AsJson {
         if let Some(user_projects) = &self.user_projects {
             object.insert(
                 "userProjects".to_owned(),
-                serde_json::to_value(user_projects).map_err(serde::ser::Error::custom)?,
+                Value::Array(user_projects.iter().map(|s| Value::String(s.to_string())).collect()),
             );
         } else {
             object.remove("userProjects");
         }
         object.insert(
             "unityEditors".to_owned(),
-            serde_json::to_value(&self.unity_editors).map_err(serde::ser::Error::custom)?,
+            Value::Array(self.unity_editors.iter().map(|s| Value::String(s.to_string())).collect()),
         );
         object.insert(
             "preferredUnityEditors".to_owned(),
@@ -130,7 +125,12 @@ impl Serialize for AsJson {
         );
         object.insert(
             "userPackageFolders".to_owned(),
-            serde_json::to_value(&self.user_package_folders).map_err(serde::ser::Error::custom)?,
+            Value::Array(
+                self.user_package_folders
+                    .iter()
+                    .map(|p| Value::String(p.display().to_string()))
+                    .collect(),
+            ),
         );
         object.insert(
             "windowSizeData".to_owned(),
@@ -170,9 +170,9 @@ impl Serialize for AsJson {
         );
         object.insert(
             "userRepos".to_owned(),
-            serde_json::to_value(&self.user_repos).map_err(serde::ser::Error::custom)?,
+            Value::Array(self.user_repos.iter().map(|r| r.to_json_value()).collect()),
         );
-        Value::Object(object).serialize(serializer)
+        Value::Object(object)
     }
 }
 
@@ -213,6 +213,14 @@ fn take_vec<T: serde::de::DeserializeOwned>(
     })
 }
 
+fn take_user_repos(object: &mut JsonObject, key: &str) -> Result<Vec<UserRepoSetting>, String> {
+    match object.remove(key) {
+        Some(Value::Array(arr)) => arr.into_iter().map(UserRepoSetting::from_json_value).collect(),
+        Some(_) => Err(format!("invalid {key}")),
+        None => Ok(Vec::new()),
+    }
+}
+
 fn take_map(object: &mut JsonObject, key: &str) -> Result<JsonObject, String> {
     Ok(match object.remove(key) {
         Some(value) => expect_object(value)?,
@@ -236,6 +244,7 @@ impl VpmSettings {
     pub async fn load_alt(io: &DefaultEnvironmentIo) -> io::Result<Option<Self>> {
         let mut settings = Self::load_inner(io, ALT_JSON_PATH).await?;
 
+        // We use data from vcc.litedb for the source of the projecs list since it's much reliable source.
         if let Some(ref mut settings) = settings {
             settings.parsed.user_projects = None;
         }
@@ -244,10 +253,16 @@ impl VpmSettings {
     }
 
     async fn load_inner(io: &DefaultEnvironmentIo, path: &str) -> io::Result<Option<Self>> {
-        let Some(parsed): Option<AsJson> = try_load_json(io, path.as_ref()).await? else {
+        let Some(value) = try_load_json_value(io, path.as_ref()).await? else {
             log::debug!("VpmSettings Configuration file not found at {path}");
             return Ok(None);
         };
+        let parsed = AsJson::from_json_value(value).map_err(|err| {
+            io::Error::new(
+                io::ErrorKind::InvalidData,
+                format!("syntax error loading {path}: {err}"),
+            )
+        })?;
 
         log::debug!("Parsed VpmSettings at {path}");
 
@@ -359,8 +374,9 @@ impl VpmSettings {
     }
 
     pub async fn save(&self, io: &DefaultEnvironmentIo) -> io::Result<()> {
-        save_json(io, JSON_PATH.as_ref(), &self.parsed).await?;
-        save_json(io, ALT_JSON_PATH.as_ref(), &self.parsed).await
+        let value = self.parsed.to_json_value();
+        save_json(io, JSON_PATH.as_ref(), &value).await?;
+        save_json(io, ALT_JSON_PATH.as_ref(), &value).await
     }
 }
 

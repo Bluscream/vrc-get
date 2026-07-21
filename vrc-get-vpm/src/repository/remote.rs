@@ -1,11 +1,10 @@
 use crate::PackageManifest;
 use crate::traits::HttpClient;
-use crate::utils::{deserialize_json_slice, expect_object};
+use crate::utils::expect_object;
 use crate::version::Version;
 use crate::{VersionSelector, io};
 use futures::prelude::*;
 use indexmap::IndexMap;
-use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use serde_json::{Map, Value};
 use std::collections::HashMap;
 use std::pin::pin;
@@ -76,7 +75,7 @@ impl RemoteRepository {
         let no_bom = bytes
             .strip_prefix(b"\xEF\xBB\xBF")
             .unwrap_or(bytes.as_ref());
-        let json = deserialize_json_slice(no_bom)?;
+        let json: JsonMap = serde_json::from_slice(no_bom)?;
 
         let mut repo = RemoteRepository::parse(json)?;
         repo.set_url_if_none(|| url.clone());
@@ -142,26 +141,6 @@ impl RemoteRepository {
 
     pub fn get_package_version(&self, name: &str, version: &Version) -> Option<&PackageManifest> {
         self.packages.get(name)?.versions.get(version)
-    }
-}
-
-impl Serialize for RemoteRepository {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        self.actual.serialize(serializer)
-    }
-}
-
-impl<'de> Deserialize<'de> for RemoteRepository {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        use serde::de::Error;
-        let map = expect_object(Value::deserialize(deserializer)?).map_err(Error::custom)?;
-        Self::parse(map).map_err(Error::custom)
     }
 }
 

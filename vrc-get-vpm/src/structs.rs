@@ -2,7 +2,6 @@ pub mod setting {
     use crate::environment::RepoSource;
     use crate::utils::{deserialize_value, expect_object, take_default_with, take_optional};
     use indexmap::IndexMap;
-    use serde::{Deserialize, Deserializer, Serialize, Serializer};
     use serde_json::{Map, Value};
     use std::path::{Path, PathBuf};
     use url::Url;
@@ -15,25 +14,6 @@ pub mod setting {
         url: Option<Url>,
         pub(crate) id: Option<Box<str>>,
         pub(crate) headers: IndexMap<Box<str>, Box<str>>,
-    }
-
-    impl<'de> Deserialize<'de> for UserRepoSetting {
-        fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-        where
-            D: Deserializer<'de>,
-        {
-            let value = Value::deserialize(deserializer)?;
-            Self::from_json_value(value).map_err(serde::de::Error::custom)
-        }
-    }
-
-    impl Serialize for UserRepoSetting {
-        fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-        where
-            S: Serializer,
-        {
-            self.to_json_value().serialize(serializer)
-        }
     }
 
     fn parse_optional_url(value: Value) -> Result<Option<Url>, String> {

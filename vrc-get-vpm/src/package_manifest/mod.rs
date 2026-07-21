@@ -7,7 +7,6 @@ use crate::utils::{
 };
 use crate::version::{Version, VersionRange};
 use indexmap::IndexMap;
-use serde::{Deserialize, Deserializer};
 use serde_json::Value;
 use std::collections::HashMap;
 use std::str::FromStr;
@@ -40,16 +39,6 @@ pub struct PackageManifest {
 pub(super) struct VrcGetMeta {
     yanked: YankState,
     aliases: Vec<Box<str>>,
-}
-
-impl<'de> Deserialize<'de> for PackageManifest {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        let value = Value::deserialize(deserializer)?;
-        Self::from_json_value(value).map_err(serde::de::Error::custom)
-    }
 }
 
 fn parse_optional_url(value: Value) -> Result<Option<Url>, String> {
@@ -377,7 +366,7 @@ fn deserialize_null_on_dependencies() {
       "samples": null,
       "zipSHA256": "0e201b9a1ed9f0e3a9c16b8f765605e8aa0c9aebf9a315c04bc67f6ebe2485f8"
     }"##;
-    let package_json: PackageManifest = serde_json::from_str(json).unwrap();
+    let package_json = PackageManifest::from_json_value(serde_json::from_str(json).unwrap()).unwrap();
     assert_eq!(package_json.name(), "com.kibalab.materialmerger");
     assert_eq!(package_json.version(), &Version::new(0, 1, 0));
     assert!(package_json.vpm_dependencies().is_empty());
@@ -404,7 +393,7 @@ fn deserialize_empty_documentation() {
       "zipSHA256": "22a143ed75c429a471ffd784102d2fb577c56b010b49439b5930cbb2df820f8b",
       "url": "https://github.com/azumyar/vrchat-shizuku/releases/download/0.0.0/net.yarukizero.vrchat.shizuku-0.0.0.zip"
     }"##;
-    let package_json: PackageManifest = serde_json::from_str(json).unwrap();
+    let package_json = PackageManifest::from_json_value(serde_json::from_str(json).unwrap()).unwrap();
     assert_eq!(package_json.name(), "net.yarukizero.vrchat.shizuku");
     assert_eq!(package_json.version(), &Version::new(0, 0, 0));
     assert_eq!(package_json.documentation_url(), None);

@@ -2,35 +2,8 @@ use crate::PackageManifest;
 use crate::repository::{RemotePackages, RemoteRepository};
 use crate::utils::{deserialize_value, expect_object, take_default_with};
 use indexmap::IndexMap;
-use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use serde_json::{Map, Value};
 use url::Url;
-
-#[derive(Debug, Clone)]
-pub struct LocalCachedRepository {
-    pub(crate) repo: RemoteRepository,
-    pub(crate) headers: IndexMap<Box<str>, Box<str>>,
-    pub(crate) vrc_get: Option<VrcGetMeta>,
-}
-
-impl<'de> Deserialize<'de> for LocalCachedRepository {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        let value = Value::deserialize(deserializer)?;
-        Self::from_json_value(value).map_err(serde::de::Error::custom)
-    }
-}
-
-impl Serialize for LocalCachedRepository {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        self.to_json_value().serialize(serializer)
-    }
-}
 
 impl LocalCachedRepository {
     pub(crate) fn from_json_value(value: Value) -> Result<Self, String> {
