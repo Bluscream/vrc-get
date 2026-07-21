@@ -9,10 +9,10 @@ use crate::environment::vpm_settings::VpmSettings;
 use crate::environment::vrc_get_settings::VrcGetSettings;
 use crate::environment::{AddUserPackageResult, PackageCollection};
 use crate::io::DefaultEnvironmentIo;
-use crate::package_manifest::LooseManifest;
 use crate::repository::RemoteRepository;
-use crate::utils::{normalize_path, try_load_json};
-use crate::{UserRepoSetting, io};
+use crate::utils::json::try_load_json_value;
+use crate::utils::normalize_path;
+use crate::{PackageManifest, UserRepoSetting, io};
 
 #[derive(Debug, Clone)]
 pub struct Settings {
@@ -166,12 +166,12 @@ impl Settings {
             }
         }
 
-        match try_load_json::<LooseManifest>(io, &pkg_path.join("package.json")).await {
-            Ok(Some(LooseManifest(package_json))) => package_json,
-            _ => {
-                return AddUserPackageResult::BadPackage;
-            }
+        let Ok(Some(value)) = try_load_json_value(io, &pkg_path.join("package.json")).await else {
+            return AddUserPackageResult::BadPackage;
         };
+        if PackageManifest::from_loose_json_value(value).is_err() {
+            return AddUserPackageResult::BadPackage;
+        }
 
         self.vpm.add_user_package_folder(pkg_path.to_owned());
 

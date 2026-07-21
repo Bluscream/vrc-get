@@ -2,19 +2,15 @@ use crate::UserRepoSetting;
 use crate::environment::PackageCollection;
 use crate::io;
 use crate::io::DefaultEnvironmentIo;
-use crate::utils::{save_json, try_load_json};
-use serde::{Deserialize, Serialize};
-use serde_json::{Map, Value};
+use crate::utils::json::{
+    JsonArray, JsonError, JsonObject, JsonValue, save_json, try_load_json_value,
+};
 use std::path::{Path, PathBuf};
 
-type JsonObject = Map<String, Value>;
-
-#[derive(Debug, Serialize, Deserialize, Clone, Default)]
-#[serde(rename_all = "camelCase")]
+#[derive(Debug, Clone, Default)]
+#[allow(clippy::struct_excessive_bools)]
 struct AsJson {
-    #[serde(default)]
     path_to_unity_exe: Box<str>,
-    #[serde(default)]
     path_to_unity_hub: Box<str>,
     // The current VPM toolchain has two places of storing user projects: `settings.json` and `vcc.litedb`.
     // Currently, `settings.json` is the single source of truth, and VCC will always copy
@@ -34,48 +30,142 @@ struct AsJson {
     //
     // See https://github.com/vrchat-community/creator-companion/issues/400#issuecomment-1855484391
     // See https://vcc.docs.vrchat.com/news/release-2.2.0/#important-notes-for-tool-developers
-    #[serde(default, skip_serializing_if = "Option::is_none")]
     user_projects: Option<Vec<Box<str>>>,
-    #[serde(default)]
     unity_editors: Vec<Box<str>>,
-    #[serde(default)]
-    preferred_unity_editors: JsonObject,
+    preferred_unity_editors: JsonValue,
     // In the current VCC, this path will be reset to default if it's null
     // and vrc-get prefers another path the VCC's one so keep null if not set
-    #[serde(default)]
     default_project_path: Option<Box<str>>,
-    #[serde(rename = "lastUIState")]
-    #[serde(default)]
-    last_ui_state: i64,
-    #[serde(default)]
-    skip_unity_auto_find: bool,
-    #[serde(default)]
+    last_ui_state: JsonValue,
+    skip_unity_auto_find: JsonValue,
     user_package_folders: Vec<PathBuf>,
-    #[serde(default)]
-    window_size_data: JsonObject,
-    #[serde(default)]
-    skip_requirements: bool,
-    #[serde(default)]
-    last_news_update: Box<str>,
-    #[serde(default)]
-    allow_pii: bool,
+    window_size_data: JsonValue,
+    skip_requirements: JsonValue,
+    last_news_update: JsonValue,
+    allow_pii: JsonValue,
     // In the current VCC, this path will be reset to default if it's null
     // and vrc-get prefers another path the VCC's one so keep null if not set
-    #[serde(default)]
     project_backup_path: Option<Box<str>>,
-    #[serde(default)]
     show_prerelease_packages: bool,
-    #[serde(default)]
-    track_community_repos: bool,
-    #[serde(default)]
-    selected_providers: u64,
-    #[serde(default)]
-    last_selected_project: Box<str>,
-    #[serde(default)]
+    track_community_repos: JsonValue,
+    selected_providers: JsonValue,
+    last_selected_project: JsonValue,
     user_repos: Vec<UserRepoSetting>,
+    raw: JsonObject,
+}
 
-    #[serde(flatten)]
-    rest: JsonObject,
+impl AsJson {
+    fn from_json_value(value: JsonValue) -> Result<Self, JsonError> {
+        let object = value.into_object()?;
+        Ok(Self {
+            path_to_unity_exe: (object.get_opt("pathToUnityExe"))
+                .try_map(JsonValue::into_string)?
+                .unwrap_or(String::new())
+                .into(),
+            path_to_unity_hub: (object.get_opt("pathToUnityHub"))
+                .try_map(JsonValue::into_string)?
+                .unwrap_or(String::new())
+                .into(),
+            user_projects: (object.get_opt("userProjects")).try_map(|value| {
+                value.into_array().and_then(|array| {
+                    array
+                        .into_iter()
+                        .map(|x| x.into_string().map(Into::into))
+                        .collect::<Result<Vec<_>, _>>()
+                })
+            })?,
+            unity_editors: (object.get_opt("unityEditors"))
+                .try_map(|value| {
+                    value.into_array().and_then(|array| {
+                        array
+                            .into_iter()
+                            .map(|x| x.into_string().map(Into::into))
+                            .collect::<Result<Vec<_>, _>>()
+                    })
+                })?
+                .unwrap_or(vec![]),
+            preferred_unity_editors: object.get_opt("preferredUnityEditors"),
+            default_project_path: (object.get_opt("defaultProjectPath"))
+                .try_map(JsonValue::into_string)?
+                .map(Into::into),
+            last_ui_state: object.get_opt("lastUIState"),
+            skip_unity_auto_find: object.get_opt("skipUnityAutoFind"),
+            user_package_folders: (object.get_opt("userPackageFolders"))
+                .try_map(|value| {
+                    value.into_array().and_then(|array| {
+                        array
+                            .into_iter()
+                            .map(|x| x.into_string().map(PathBuf::from))
+                            .collect::<Result<Vec<_>, _>>()
+                    })
+                })?
+                .unwrap_or(vec![]),
+            window_size_data: object.get_opt("windowSizeData"),
+            skip_requirements: object.get_opt("skipRequirements"),
+            last_news_update: object.get_opt("lastNewsUpdate"),
+            allow_pii: object.get_opt("allowPii"),
+            project_backup_path: (object.get_opt("projectBackupPath"))
+                .try_map(JsonValue::into_string)?
+                .map(Into::into),
+            show_prerelease_packages: (object.get_opt("showPrereleasePackages"))
+                .try_map(JsonValue::into_bool)?
+                .unwrap_or(false),
+            track_community_repos: object.get_opt("trackCommunityRepos"),
+            selected_providers: object.get_opt("selectedProviders"),
+            last_selected_project: object.get_opt("lastSelectedProject"),
+            user_repos: (object.get_opt("userRepos"))
+                .try_map(|value| {
+                    value.into_array().and_then(|array| {
+                        array
+                            .into_iter()
+                            .map(UserRepoSetting::from_json_value)
+                            .collect::<Result<Vec<_>, _>>()
+                    })
+                })?
+                .unwrap_or(vec![]),
+            raw: object,
+        })
+    }
+
+    fn to_json_value(&self) -> JsonValue {
+        let mut object = self.raw.clone();
+        object.insert("pathToUnityExe", &self.path_to_unity_exe);
+        object.insert("pathToUnityHub", &self.path_to_unity_hub);
+        if let Some(user_projects) = &self.user_projects {
+            object.insert("userProjects", user_projects.as_slice());
+        } else {
+            object.remove("userProjects");
+        }
+        object.insert("unityEditors", self.unity_editors.as_slice());
+        object.insert("preferredUnityEditors", &self.preferred_unity_editors);
+        object.insert("defaultProjectPath", self.default_project_path.as_deref());
+        object.insert("lastUIState", &self.last_ui_state);
+        object.insert("skipUnityAutoFind", &self.skip_unity_auto_find);
+        object.insert(
+            "userPackageFolders",
+            self.user_package_folders
+                .iter()
+                .map(|x| x.to_string_lossy())
+                .collect::<JsonArray>(),
+        );
+        object.insert("windowSizeData", &self.window_size_data);
+        object.insert("skipRequirements", &self.skip_requirements);
+        object.insert("lastNewsUpdate", &self.last_news_update);
+        object.insert("allowPii", self.allow_pii.clone());
+        object.insert("projectBackupPath", self.project_backup_path.as_deref());
+        object.insert("showPrereleasePackages", self.show_prerelease_packages);
+        object.insert("trackCommunityRepos", self.track_community_repos.clone());
+        object.insert("selectedProviders", &self.selected_providers);
+        object.insert("lastSelectedProject", &self.last_selected_project);
+        object.insert(
+            "userRepos",
+            self.user_repos
+                .iter()
+                .map(|r| r.to_json_value())
+                .collect::<JsonArray>(),
+        );
+        object.into()
+    }
 }
 
 #[derive(Default, Debug, Clone)]
@@ -103,10 +193,16 @@ impl VpmSettings {
     }
 
     async fn load_inner(io: &DefaultEnvironmentIo, path: &str) -> io::Result<Option<Self>> {
-        let Some(parsed): Option<AsJson> = try_load_json(io, path.as_ref()).await? else {
+        let Some(value) = try_load_json_value(io, path.as_ref()).await? else {
             log::debug!("VpmSettings Configuration file not found at {path}");
             return Ok(None);
         };
+        let parsed = AsJson::from_json_value(value).map_err(|err| {
+            io::Error::new(
+                io::ErrorKind::InvalidData,
+                format!("syntax error loading {path}: {err}"),
+            )
+        })?;
 
         log::debug!("Parsed VpmSettings at {path}");
 
@@ -218,8 +314,9 @@ impl VpmSettings {
     }
 
     pub async fn save(&self, io: &DefaultEnvironmentIo) -> io::Result<()> {
-        save_json(io, JSON_PATH.as_ref(), &self.parsed).await?;
-        save_json(io, ALT_JSON_PATH.as_ref(), &self.parsed).await
+        let value = self.parsed.to_json_value();
+        save_json(io, JSON_PATH.as_ref(), &value).await?;
+        save_json(io, ALT_JSON_PATH.as_ref(), &value).await
     }
 }
 

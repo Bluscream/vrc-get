@@ -33,6 +33,7 @@ tokio = { version = "1", features = ["rt-multi-thread", "macros", "fs"] }
 version = "0.0.17-beta.0"
 path = "../vrc-get-vpm"
 default-features = false
+features = ["version-serde"]
 
 [build-dependencies]
 home = "0.5"

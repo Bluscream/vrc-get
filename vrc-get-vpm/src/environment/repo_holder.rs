@@ -6,7 +6,8 @@ use crate::io::{DefaultEnvironmentIo, IoTrait};
 use crate::repository::RemoteRepository;
 use crate::repository::local::LocalCachedRepository;
 use crate::traits::HttpClient;
-use crate::utils::{parse_json_file, read_to_end, to_vec_pretty_os_eol, try_load_json};
+use crate::utils::json::{parse_json_file, to_vec_pretty_os_eol, try_load_json};
+use crate::utils::read_to_end;
 use crate::{UserRepoSetting, io};
 use futures::future::join_all;
 use indexmap::IndexMap;
@@ -195,7 +196,9 @@ impl RepoHolder {
     ) -> io::Result<Option<LocalCachedRepository>> {
         let path = source.cache_path();
         if let Some(url) = source.url() {
-            if let Some(mut loaded) = try_load_json::<LocalCachedRepository>(io, path).await? {
+            if let Some(mut loaded) =
+                try_load_json(io, path, LocalCachedRepository::from_json_value).await?
+            {
                 loaded.set_url(url.clone());
                 Ok(Some(loaded))
             } else {
@@ -205,7 +208,8 @@ impl RepoHolder {
         } else {
             Ok(Some(parse_json_file(
                 &read_to_end(io.open(path).await?).await?,
-                path,
+                path.display(),
+                LocalCachedRepository::from_json_value,
             )?))
         }
     }
@@ -254,8 +258,11 @@ impl RepoHolder {
                                 path: &Path,
                                 repository: &LocalCachedRepository,
                             ) -> io::Result<()> {
-                                io.write_sync(path, &to_vec_pretty_os_eol(&repository)?)
-                                    .await
+                                io.write_sync(
+                                    path,
+                                    &to_vec_pretty_os_eol(&repository.to_json_value())?,
+                                )
+                                .await
                             }
 
                             if let Err(e) = save_repository(io, path, new_repository).await {

@@ -8,7 +8,6 @@ use std::fmt::Display;
 use std::path::Path;
 
 use indexmap::IndexMap;
-use serde_repr::{Deserialize_repr, Serialize_repr};
 
 use version::{ReleaseType, UnityVersion, Version, VersionRange};
 
@@ -155,7 +154,7 @@ impl<'a> PackageInfo<'a> {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize_repr, Deserialize_repr)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[repr(u8)]
 pub enum ProjectType {
     Unknown = 0,
