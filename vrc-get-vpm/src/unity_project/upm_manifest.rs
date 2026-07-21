@@ -1,6 +1,6 @@
 use crate::io;
 use crate::io::DefaultProjectIo;
-use crate::utils::{JsonMapExt, SaveController, load_json_or_default, save_json};
+use crate::utils::{JsonMapExt, SaveController, deserialize_value, expect_object, load_json_or_default, save_json};
 use crate::version::Version;
 use serde::de::Error;
 use serde::{Deserialize, Deserializer, Serialize};
@@ -11,18 +11,15 @@ use std::str::FromStr;
 
 const MANIFEST_PATH: &str = "Packages/manifest.json";
 
-#[derive(Debug, Default, Deserialize)]
+#[derive(Debug, Default)]
 struct Parsed {
-    #[serde(default)]
     dependencies: HashMap<Box<str>, UpmDependency>,
 }
 
 #[derive(Debug)]
 #[allow(dead_code)]
 pub(super) enum UpmDependency {
-    // minimum version name. build meta is not supported by upm
     Version(Version),
-    // Other Notation including local file and git url
     OtherNotation(Box<str>),
 }
 
@@ -78,13 +75,8 @@ impl<'de> Deserialize<'de> for AsJson {
     where
         D: Deserializer<'de>,
     {
-        let raw: Map<String, Value> = Map::<String, Value>::deserialize(deserializer)?;
-        let raw_value = Value::Object(raw);
-        let as_json = Parsed::deserialize(&raw_value).map_err(Error::custom)?;
-        let raw = match raw_value {
-            Value::Object(map) => map,
-            _ => unreachable!(),
-        };
+        let raw = expect_object(Value::deserialize(deserializer)?).map_err(Error::custom)?;
+        let as_json = Parsed::from_json_value(Value::Object(raw.clone())).map_err(Error::custom)?;
         Ok(Self { as_json, raw })
     }
 }
@@ -95,6 +87,22 @@ impl Serialize for AsJson {
         S: serde::Serializer,
     {
         self.raw.serialize(serializer)
+    }
+}
+
+impl Parsed {
+    fn from_json_value(value: Value) -> Result<Self, String> {
+        let mut raw = expect_object(value)?;
+        let dependencies = match raw.remove("dependencies") {
+            Some(value) => expect_object(value)?
+                .into_iter()
+                .map(|(name, value)| {
+                    deserialize_value::<UpmDependency>(value).map(|dep| (name.into_boxed_str(), dep))
+                })
+                .collect::<Result<HashMap<_, _>, _>>()?,
+            None => HashMap::new(),
+        };
+        Ok(Self { dependencies })
     }
 }
 

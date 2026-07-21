@@ -1,20 +1,86 @@
 use crate::PackageManifest;
 use crate::repository::{RemotePackages, RemoteRepository};
+use crate::utils::{deserialize_value, expect_object, take_default_with};
 use indexmap::IndexMap;
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
+use serde_json::{Map, Value};
 use url::Url;
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Debug, Clone)]
 pub struct LocalCachedRepository {
     pub(crate) repo: RemoteRepository,
-    #[serde(default, skip_serializing_if = "IndexMap::is_empty")]
     pub(crate) headers: IndexMap<Box<str>, Box<str>>,
-    #[serde(rename = "vrc-get")]
-    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub(crate) vrc_get: Option<VrcGetMeta>,
 }
 
+impl<'de> Deserialize<'de> for LocalCachedRepository {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let value = Value::deserialize(deserializer)?;
+        Self::from_json_value(value).map_err(serde::de::Error::custom)
+    }
+}
+
+impl Serialize for LocalCachedRepository {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        self.to_json_value().serialize(serializer)
+    }
+}
+
 impl LocalCachedRepository {
+    pub(crate) fn from_json_value(value: Value) -> Result<Self, String> {
+        let mut object = expect_object(value)?;
+        let repo = RemoteRepository::parse(expect_object(
+            object.remove("repo").ok_or_else(|| "missing repo".to_owned())?,
+        )?)?;
+        let headers = take_default_with(&mut object, "headers", |value| {
+            expect_object(value)?
+                .into_iter()
+                .map(|(key, value)| {
+                    deserialize_value::<Box<str>>(value).map(|value| (key.into_boxed_str(), value))
+                })
+                .collect::<Result<IndexMap<_, _>, _>>()
+        })?;
+        let vrc_get = match object.remove("vrc-get") {
+            Some(value) => Some(VrcGetMeta::from_json_value(value)?),
+            None => None,
+        };
+        Ok(Self {
+            repo,
+            headers,
+            vrc_get,
+        })
+    }
+
+    pub(crate) fn to_json_value(&self) -> Value {
+        let mut object = Map::new();
+        object.insert("repo".to_owned(), self.repo.to_json_value());
+        if !self.headers.is_empty() {
+            object.insert(
+                "headers".to_owned(),
+                Value::Object(
+                    self.headers
+                        .iter()
+                        .map(|(k, v)| (k.to_string(), Value::String(v.to_string())))
+                        .collect(),
+                ),
+            );
+        }
+        if let Some(vrc_get) = &self.vrc_get {
+            if let Value::Object(value) = vrc_get.to_json_value()
+                && !value.is_empty()
+            {
+                object.insert("vrc-get".to_owned(), Value::Object(value));
+            }
+        }
+        Value::Object(object)
+    }
+
     pub fn new(repo: RemoteRepository, headers: IndexMap<Box<str>, Box<str>>) -> Self {
         Self {
             repo,
@@ -77,8 +143,27 @@ impl LocalCachedRepository {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone, Default)]
+#[derive(Debug, Clone, Default)]
 pub struct VrcGetMeta {
-    #[serde(default, skip_serializing_if = "str::is_empty")]
     pub etag: Box<str>,
+}
+
+impl VrcGetMeta {
+    fn from_json_value(value: Value) -> Result<Self, String> {
+        let mut object = expect_object(value)?;
+        Ok(Self {
+            etag: match object.remove("etag") {
+                Some(value) => deserialize_value::<Box<str>>(value)?,
+                None => "".into(),
+            },
+        })
+    }
+
+    fn to_json_value(&self) -> Value {
+        let mut object = Map::new();
+        if !self.etag.is_empty() {
+            object.insert("etag".to_owned(), Value::String(self.etag.to_string()));
+        }
+        Value::Object(object)
+    }
 }

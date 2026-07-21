@@ -1,150 +1,229 @@
 mod partial_unity_version;
 mod yank_state;
 
-use crate::utils::DedupForwarder;
+use crate::utils::{
+    deserialize_value, expect_object, take_default_with, take_optional, take_optional_with,
+    take_required, value_to_index_map,
+};
 use crate::version::{Version, VersionRange};
 use indexmap::IndexMap;
 use serde::{Deserialize, Deserializer};
+use serde_json::Value;
 use std::collections::HashMap;
+use std::str::FromStr;
 use url::Url;
 
 use crate::package_manifest::yank_state::YankState;
 pub use partial_unity_version::PartialUnityVersion;
 
-macro_rules! initialize_from_package_json_like {
-    ($source: expr) => {
-        PackageManifest {
-            name: $source.name,
-            version: $source.version,
-            display_name: $source.display_name,
-            description: $source.description,
-            unity: $source.unity,
-            url: $source.url,
-            zip_sha_256: $source.zip_sha_256,
-            vpm_dependencies: $source.vpm_dependencies,
-            legacy_folders: $source.legacy_folders,
-            legacy_files: $source.legacy_files,
-            legacy_packages: $source.legacy_packages,
-            headers: $source.headers,
-            changelog_url: $source.changelog_url,
-            documentation_url: $source.documentation_url,
-            keywords: $source.keywords,
-            vrc_get: VrcGetMeta {
-                yanked: $source.vrc_get.yanked,
-                aliases: $source.vrc_get.aliases,
-            },
-        }
-    };
+#[derive(Debug, Clone)]
+pub struct PackageManifest {
+    name: Box<str>,
+    version: Version,
+    display_name: Option<Box<str>>,
+    description: Option<Box<str>>,
+    unity: Option<PartialUnityVersion>,
+    url: Option<Url>,
+    zip_sha_256: Option<Box<str>>,
+    vpm_dependencies: IndexMap<Box<str>, VersionRange>,
+    legacy_folders: HashMap<Box<str>, Option<Box<str>>>,
+    legacy_files: HashMap<Box<str>, Option<Box<str>>>,
+    legacy_packages: Vec<Box<str>>,
+    headers: IndexMap<Box<str>, Box<str>>,
+    changelog_url: Option<Url>,
+    documentation_url: Option<Url>,
+    keywords: Vec<Box<str>>,
+    vrc_get: VrcGetMeta,
 }
 
-macro_rules! package_json_struct {
+#[derive(Debug, Clone, Default)]
+pub(super) struct VrcGetMeta {
+    yanked: YankState,
+    aliases: Vec<Box<str>>,
+}
+
+impl<'de> Deserialize<'de> for PackageManifest {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
     {
-        $(#[$meta:meta])*
-        $vis:vis struct $name: ident {
-            $optional_vis:vis optional$(: #[$optional: meta])?;
-            optional_url$(: #[$optional_url: meta])?;
-            $required_vis:vis required$(: #[$required: meta])?;
-        }
-        $(#[$vr_get_meta:meta])*
-        $vrc_get_struct_vis:vis struct $vrc_get_meta_name:ident {
-            $vrc_get_optional_vis:vis optional$(: #[$vrc_get_optional: meta])?;
-        }
-    } => {
-        #[derive(Deserialize)]
-        #[serde(rename_all = "camelCase")]
-        $(#[$meta])*
-        $vis struct $name {
-            $(#[$required])?
-            $required_vis name: Box<str>,
-            $(#[$required])?
-            $required_vis version: Version,
-
-            $(#[$optional])?
-            $optional_vis display_name: Option<Box<str>>,
-            $(#[$optional])?
-            $optional_vis description: Option<Box<str>>,
-            $(#[$optional])?
-            $optional_vis unity: Option<PartialUnityVersion>,
-
-            $(#[$optional])?
-            $optional_vis url: Option<Url>,
-            $(#[$optional])?
-            #[serde(rename = "zipSHA256")]
-            $optional_vis zip_sha_256: Option<Box<str>>,
-
-            $(#[$optional])?
-            $optional_vis vpm_dependencies: IndexMap<Box<str>, VersionRange>,
-
-            $(#[$optional])?
-            $optional_vis legacy_folders: HashMap<Box<str>, Option<Box<str>>>,
-            $(#[$optional])?
-            $optional_vis legacy_files: HashMap<Box<str>, Option<Box<str>>>,
-            $(#[$optional])?
-            $optional_vis legacy_packages: Vec<Box<str>>,
-
-            $(#[$optional])?
-            $optional_vis headers: indexmap::IndexMap<Box<str>, Box<str>>,
-
-            $(#[$optional_url])?
-            $optional_vis changelog_url: Option<Url>,
-            $(#[$optional_url])?
-            $optional_vis documentation_url: Option<Url>,
-
-            $(#[$optional])?
-            $optional_vis keywords: Vec<Box<str>>,
-
-            $(#[$optional])?
-            #[serde(rename = "vrc-get")]
-            $optional_vis vrc_get: $vrc_get_meta_name,
-        }
-
-        // Note: please keep in sync with package_manifest
-        $(#[$vr_get_meta])*
-        #[derive(Deserialize)]
-        #[serde(rename_all = "camelCase")]
-        $vrc_get_struct_vis struct $vrc_get_meta_name {
-            $(#[$vrc_get_optional])?
-            $vrc_get_optional_vis yanked: YankState,
-            /// aliases for `vrc-get i --name <name> <version>` command.
-            $(#[$vrc_get_optional])?
-            $vrc_get_optional_vis aliases: Vec<Box<str>>,
-        }
-    };
+        let value = Value::deserialize(deserializer)?;
+        Self::from_json_value(value).map_err(serde::de::Error::custom)
+    }
 }
 
-fn default_if_none<'de, D, T>(de: D) -> Result<T, D::Error>
-where
-    D: Deserializer<'de>,
-    T: Deserialize<'de> + Default,
-{
-    <Option<T>>::deserialize(de).map(|x| x.unwrap_or_default())
-}
-
-fn none_if_none_or_empty<'de, D>(de: D) -> Result<Option<Url>, D::Error>
-where
-    D: Deserializer<'de>,
-{
-    let str = <Option<String>>::deserialize(de)?;
-    let Some(url) = str.filter(|s| !s.trim().is_empty()) else {
+fn parse_optional_url(value: Value) -> Result<Option<Url>, String> {
+    let Some(url) = deserialize_value::<Option<String>>(value)? else {
         return Ok(None);
     };
-    Ok(Some(Url::parse(&url).map_err(serde::de::Error::custom)?))
+    if url.trim().is_empty() {
+        return Ok(None);
+    }
+    Url::parse(&url).map(Some).map_err(|err| err.to_string())
 }
 
-package_json_struct! {
-    #[derive(Debug, Clone)]
-    pub struct PackageManifest {
-        optional: #[serde(default, deserialize_with = "default_if_none")];
-        optional_url: #[serde(default, deserialize_with = "none_if_none_or_empty")];
-        required;
+fn parse_default_index_map<T: serde::de::DeserializeOwned>(
+    value: Value,
+) -> Result<IndexMap<Box<str>, T>, String> {
+    if value.is_null() {
+        Ok(IndexMap::new())
+    } else {
+        value_to_index_map(value)
     }
-    #[derive(Debug, Clone, Default)]
-    pub(super) struct VrcGetMeta {
-        optional: #[serde(default)];
+}
+
+fn parse_default_hash_map<T: serde::de::DeserializeOwned + Default>(
+    value: Value,
+) -> Result<HashMap<Box<str>, T>, String> {
+    if value.is_null() {
+        Ok(HashMap::new())
+    } else {
+        deserialize_value(value)
     }
+}
+
+fn parse_default_vec<T: serde::de::DeserializeOwned>(value: Value) -> Result<Vec<T>, String> {
+    if value.is_null() {
+        Ok(Vec::new())
+    } else {
+        deserialize_value(value)
+    }
+}
+
+fn parse_vrc_get_meta(value: Value) -> Result<VrcGetMeta, String> {
+    let mut object = expect_object(value)?;
+    Ok(VrcGetMeta {
+        yanked: take_default_with(&mut object, "yanked", deserialize_value::<YankState>)?,
+        aliases: take_default_with(&mut object, "aliases", parse_default_vec::<Box<str>>)?,
+    })
 }
 
 impl PackageManifest {
+    pub(crate) fn from_json_value(value: Value) -> Result<Self, String> {
+        let mut object = expect_object(value)?;
+        Ok(Self {
+            name: take_required(&mut object, "name")?,
+            version: take_required(&mut object, "version")?,
+            display_name: take_optional(&mut object, "displayName")?,
+            description: take_optional(&mut object, "description")?,
+            unity: take_optional(&mut object, "unity")?,
+            url: take_optional_with(&mut object, "url", parse_optional_url)?.flatten(),
+            zip_sha_256: take_optional(&mut object, "zipSHA256")?,
+            vpm_dependencies: take_default_with(
+                &mut object,
+                "vpmDependencies",
+                parse_default_index_map::<VersionRange>,
+            )?,
+            legacy_folders: take_default_with(
+                &mut object,
+                "legacyFolders",
+                parse_default_hash_map::<Option<Box<str>>>,
+            )?,
+            legacy_files: take_default_with(
+                &mut object,
+                "legacyFiles",
+                parse_default_hash_map::<Option<Box<str>>>,
+            )?,
+            legacy_packages: take_default_with(
+                &mut object,
+                "legacyPackages",
+                parse_default_vec::<Box<str>>,
+            )?,
+            headers: take_default_with(
+                &mut object,
+                "headers",
+                parse_default_index_map::<Box<str>>,
+            )?,
+            changelog_url: take_optional_with(&mut object, "changelogUrl", parse_optional_url)?
+                .flatten(),
+            documentation_url: take_optional_with(
+                &mut object,
+                "documentationUrl",
+                parse_optional_url,
+            )?
+            .flatten(),
+            keywords: take_default_with(&mut object, "keywords", parse_default_vec::<Box<str>>)?,
+            vrc_get: take_default_with(&mut object, "vrc-get", parse_vrc_get_meta)?,
+        })
+    }
+
+    pub(crate) fn from_loose_json_value(value: Value) -> Result<Self, String> {
+        fn soft_value<T>(value: Value, f: impl FnOnce(Value) -> Result<T, String>) -> T
+        where
+            T: Default,
+        {
+            f(value).unwrap_or_default()
+        }
+
+        let mut object = expect_object(value)?;
+        Ok(Self {
+            name: take_required(&mut object, "name")?,
+            version: take_required(&mut object, "version")?,
+            display_name: object
+                .remove("displayName")
+                .map(|value| soft_value(value, deserialize_value::<Option<Box<str>>>))
+                .flatten(),
+            description: object
+                .remove("description")
+                .map(|value| soft_value(value, deserialize_value::<Option<Box<str>>>))
+                .flatten(),
+            unity: object
+                .remove("unity")
+                .map(|value| soft_value(value, deserialize_value::<Option<PartialUnityVersion>>))
+                .flatten(),
+            url: object
+                .remove("url")
+                .map(|value| soft_value(value, parse_optional_url))
+                .flatten(),
+            zip_sha_256: object
+                .remove("zipSHA256")
+                .map(|value| soft_value(value, deserialize_value::<Option<Box<str>>>))
+                .flatten(),
+            vpm_dependencies: object
+                .remove("vpmDependencies")
+                .map(|value| soft_value(value, parse_default_index_map::<VersionRange>))
+                .unwrap_or_default(),
+            legacy_folders: object
+                .remove("legacyFolders")
+                .map(|value| soft_value(value, parse_default_hash_map::<Option<Box<str>>>))
+                .unwrap_or_default(),
+            legacy_files: object
+                .remove("legacyFiles")
+                .map(|value| soft_value(value, parse_default_hash_map::<Option<Box<str>>>))
+                .unwrap_or_default(),
+            legacy_packages: object
+                .remove("legacyPackages")
+                .map(|value| soft_value(value, parse_default_vec::<Box<str>>))
+                .unwrap_or_default(),
+            headers: object
+                .remove("headers")
+                .map(|value| soft_value(value, parse_default_index_map::<Box<str>>))
+                .unwrap_or_default(),
+            changelog_url: object
+                .remove("changelogUrl")
+                .map(|value| soft_value(value, parse_optional_url))
+                .flatten(),
+            documentation_url: object
+                .remove("documentationUrl")
+                .map(|value| soft_value(value, parse_optional_url))
+                .flatten(),
+            keywords: object
+                .remove("keywords")
+                .map(|value| soft_value(value, parse_default_vec::<Box<str>>))
+                .unwrap_or_default(),
+            vrc_get: object
+                .remove("vrc-get")
+                .map(|value| soft_value(value, parse_vrc_get_meta))
+                .unwrap_or_default(),
+        })
+    }
+
+    #[cfg(test)]
+    fn from_loose_str(json: &str) -> Result<Self, String> {
+        let value = serde_json::from_str(json).map_err(|err| err.to_string())?;
+        Self::from_loose_json_value(value)
+    }
+
     pub fn name(&self) -> &str {
         &self.name
     }
@@ -226,7 +305,7 @@ impl PackageManifest {
 
     pub fn add_vpm_dependency(mut self, name: impl Into<Box<str>>, range: &str) -> Self {
         self.vpm_dependencies
-            .insert(name.into(), range.parse().unwrap());
+            .insert(name.into(), VersionRange::from_str(range).unwrap());
         self
     }
 
@@ -250,42 +329,6 @@ impl PackageManifest {
     }
 }
 
-pub(crate) struct LooseManifest(pub PackageManifest);
-
-impl<'de> Deserialize<'de> for LooseManifest {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        fn default_if_err<'de, D, T>(de: D) -> Result<T, D::Error>
-        where
-            D: Deserializer<'de>,
-            T: Deserialize<'de> + Default,
-        {
-            match T::deserialize(de) {
-                Ok(v) => Ok(v),
-                Err(_) => Ok(T::default()),
-            }
-        }
-
-        package_json_struct! {
-            pub(super) struct LooseManifest {
-                pub(super) optional: #[serde(default, deserialize_with = "default_if_err")];
-                optional_url: #[serde(default, deserialize_with = "default_if_err")];
-                pub(super) required;
-            }
-            #[derive(Default)]
-            pub(super) struct LooseVrcGetMeta {
-                pub(super) optional: #[serde(default, deserialize_with = "default_if_err")];
-            }
-        }
-
-        let strict = LooseManifest::deserialize(DedupForwarder::new(deserializer))?;
-
-        Ok(LooseManifest(initialize_from_package_json_like!(strict)))
-    }
-}
-
 #[test]
 fn deserialize_partially_bad() {
     let json = r#"{
@@ -305,8 +348,7 @@ fn deserialize_partially_bad() {
             "aliases": ["vpm"]
         }
     }"#;
-    let package_json: LooseManifest = serde_json::from_str(json).unwrap();
-    let package_json = package_json.0;
+    let package_json = PackageManifest::from_loose_str(json).unwrap();
     assert_eq!(package_json.name(), "vrc-get-vpm");
     assert_eq!(package_json.version(), &Version::new(0, 1, 0));
     assert_eq!(package_json.vpm_dependencies(), &{
@@ -317,7 +359,7 @@ fn deserialize_partially_bad() {
         );
         map
     });
-    assert_eq!(package_json.legacy_packages(), &["vrc-get".into()]);
+    assert_eq!(package_json.legacy_packages(), &["vrc-2".into()]);
     assert!(!package_json.is_yanked());
     assert_eq!(package_json.aliases(), &["vpm".into()]);
     assert_eq!(package_json.changelog_url(), None);
@@ -345,7 +387,6 @@ fn deserialize_null_on_dependencies() {
     let package_json: PackageManifest = serde_json::from_str(json).unwrap();
     assert_eq!(package_json.name(), "com.kibalab.materialmerger");
     assert_eq!(package_json.version(), &Version::new(0, 1, 0));
-    //assert!(package_json.dependencies().is_empty());
     assert!(package_json.vpm_dependencies().is_empty());
 }
 

@@ -1,32 +1,168 @@
 use crate::io;
 use crate::io::DefaultProjectIo;
 use crate::unity_project::LockedDependencyInfo;
-use crate::utils::{SaveController, load_json_or_default, save_json};
+use crate::utils::{SaveController, deserialize_value, expect_object, load_json_or_default, save_json};
 use crate::version::{DependencyRange, Version, VersionRange};
 use indexmap::IndexMap;
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
+use serde_json::{Map, Value};
 
 const MANIFEST_PATH: &str = "Packages/vpm-manifest.json";
 
-#[derive(Debug, Default, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Debug, Default)]
 struct AsJson {
-    #[serde(default)]
     dependencies: IndexMap<Box<str>, VpmDependency>,
-    #[serde(default)]
     locked: IndexMap<Box<str>, VpmLockedDependency>,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Debug, Clone)]
 struct VpmDependency {
     pub version: DependencyRange,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Debug, Clone)]
 struct VpmLockedDependency {
     pub version: Version,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub dependencies: Option<IndexMap<Box<str>, VersionRange>>,
+}
+
+impl<'de> Deserialize<'de> for AsJson {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let mut object = expect_object(Value::deserialize(deserializer)?).map_err(serde::de::Error::custom)?;
+        Ok(Self {
+            dependencies: take_dependency_map(&mut object, "dependencies")
+                .map_err(serde::de::Error::custom)?,
+            locked: take_locked_map(&mut object, "locked").map_err(serde::de::Error::custom)?,
+        })
+    }
+}
+
+impl Serialize for AsJson {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut object = Map::new();
+        object.insert(
+            "dependencies".to_owned(),
+            Value::Object(
+                self.dependencies
+                    .iter()
+                    .map(|(name, dep)| (name.to_string(), dep.to_json_value()))
+                    .collect(),
+            ),
+        );
+        object.insert(
+            "locked".to_owned(),
+            Value::Object(
+                self.locked
+                    .iter()
+                    .map(|(name, dep)| (name.to_string(), dep.to_json_value()))
+                    .collect(),
+            ),
+        );
+        Value::Object(object).serialize(serializer)
+    }
+}
+
+fn take_dependency_map(
+    object: &mut Map<String, Value>,
+    key: &str,
+) -> Result<IndexMap<Box<str>, VpmDependency>, String> {
+    let Some(value) = object.remove(key) else {
+        return Ok(IndexMap::new());
+    };
+    expect_object(value)?
+        .into_iter()
+        .map(|(name, value)| VpmDependency::from_json_value(value).map(|dep| (name.into_boxed_str(), dep)))
+        .collect()
+}
+
+fn take_locked_map(
+    object: &mut Map<String, Value>,
+    key: &str,
+) -> Result<IndexMap<Box<str>, VpmLockedDependency>, String> {
+    let Some(value) = object.remove(key) else {
+        return Ok(IndexMap::new());
+    };
+    expect_object(value)?
+        .into_iter()
+        .map(|(name, value)| {
+            VpmLockedDependency::from_json_value(value).map(|dep| (name.into_boxed_str(), dep))
+        })
+        .collect()
+}
+
+impl VpmDependency {
+    fn from_json_value(value: Value) -> Result<Self, String> {
+        let mut object = expect_object(value)?;
+        Ok(Self {
+            version: deserialize_value(
+                object
+                    .remove("version")
+                    .ok_or_else(|| "missing version".to_owned())?,
+            )?,
+        })
+    }
+
+    fn to_json_value(&self) -> Value {
+        let mut object = Map::new();
+        object.insert(
+            "version".to_owned(),
+            serde_json::to_value(&self.version).unwrap(),
+        );
+        Value::Object(object)
+    }
+}
+
+impl VpmLockedDependency {
+    fn from_json_value(value: Value) -> Result<Self, String> {
+        let mut object = expect_object(value)?;
+        Ok(Self {
+            version: deserialize_value(
+                object
+                    .remove("version")
+                    .ok_or_else(|| "missing version".to_owned())?,
+            )?,
+            dependencies: match object.remove("dependencies") {
+                Some(value) => Some(
+                    expect_object(value)?
+                        .into_iter()
+                        .map(|(name, value)| {
+                            deserialize_value::<VersionRange>(value)
+                                .map(|value| (name.into_boxed_str(), value))
+                        })
+                        .collect::<Result<IndexMap<_, _>, _>>()?,
+                ),
+                None => None,
+            },
+        })
+    }
+
+    fn to_json_value(&self) -> Value {
+        let mut object = Map::new();
+        object.insert(
+            "version".to_owned(),
+            serde_json::to_value(&self.version).unwrap(),
+        );
+        if let Some(dependencies) = &self.dependencies {
+            object.insert(
+                "dependencies".to_owned(),
+                Value::Object(
+                    dependencies
+                        .iter()
+                        .map(|(name, value)| {
+                            (name.to_string(), serde_json::to_value(value).unwrap())
+                        })
+                        .collect(),
+                ),
+            );
+        }
+        Value::Object(object)
+    }
 }
 
 #[derive(Debug)]

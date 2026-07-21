@@ -2,80 +2,213 @@ use crate::UserRepoSetting;
 use crate::environment::PackageCollection;
 use crate::io;
 use crate::io::DefaultEnvironmentIo;
-use crate::utils::{save_json, try_load_json};
-use serde::{Deserialize, Serialize};
-use serde_json::{Map, Value};
+use crate::utils::{deserialize_value, expect_object, save_json, try_load_json};
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
+use serde_json::{Map, Number, Value};
 use std::path::{Path, PathBuf};
+
+#[derive(Debug, Clone, Default)]
+#[allow(clippy::struct_excessive_bools)]
+struct AsJson {
+    path_to_unity_exe: Box<str>,
+    path_to_unity_hub: Box<str>,
+    user_projects: Option<Vec<Box<str>>>,
+    unity_editors: Vec<Box<str>>,
+    preferred_unity_editors: JsonObject,
+    default_project_path: Option<Box<str>>,
+    last_ui_state: i64,
+    skip_unity_auto_find: bool,
+    user_package_folders: Vec<PathBuf>,
+    window_size_data: JsonObject,
+    skip_requirements: bool,
+    last_news_update: Box<str>,
+    allow_pii: bool,
+    project_backup_path: Option<Box<str>>,
+    show_prerelease_packages: bool,
+    track_community_repos: bool,
+    selected_providers: u64,
+    last_selected_project: Box<str>,
+    user_repos: Vec<UserRepoSetting>,
+    rest: JsonObject,
+}
 
 type JsonObject = Map<String, Value>;
 
-#[derive(Debug, Serialize, Deserialize, Clone, Default)]
-#[serde(rename_all = "camelCase")]
-struct AsJson {
-    #[serde(default)]
-    path_to_unity_exe: Box<str>,
-    #[serde(default)]
-    path_to_unity_hub: Box<str>,
-    // The current VPM toolchain has two places of storing user projects: `settings.json` and `vcc.litedb`.
-    // Currently, `settings.json` is the single source of truth, and VCC will always copy
-    // information of `settings.json` to `vcc.litedb`.
-    //
-    // However, it's announced that future VCC will remove copying `settings.json` to `vcc.litedb`.
-    // There's no detailed documentation on how `settings.json` would be when migration removal becomes true.
-    // However, we can assume the `userProjects` key will be absent from `settings.json` and `vcc.litedb` become
-    // the single source of truth (opposite to current `settings.json`).
-    //
-    // To support reading the settings.json for both versions and writing for both versions
-    // 1) vrc-get will skip copying the data from 'userProjects' to vcc.litedb if 'userProjects' is absent,
-    //      for future VCC compatibility
-    // 2) vrc-get will always emit 'userProjects' key even if 'userProjects' is absent.
-    //    The future VCC will just remove 'userProjects' so this should not cause a problem,
-    //       and older VCC will become compatible since 'userProjects' can become single source of truth
-    //
-    // See https://github.com/vrchat-community/creator-companion/issues/400#issuecomment-1855484391
-    // See https://vcc.docs.vrchat.com/news/release-2.2.0/#important-notes-for-tool-developers
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    user_projects: Option<Vec<Box<str>>>,
-    #[serde(default)]
-    unity_editors: Vec<Box<str>>,
-    #[serde(default)]
-    preferred_unity_editors: JsonObject,
-    // In the current VCC, this path will be reset to default if it's null
-    // and vrc-get prefers another path the VCC's one so keep null if not set
-    #[serde(default)]
-    default_project_path: Option<Box<str>>,
-    #[serde(rename = "lastUIState")]
-    #[serde(default)]
-    last_ui_state: i64,
-    #[serde(default)]
-    skip_unity_auto_find: bool,
-    #[serde(default)]
-    user_package_folders: Vec<PathBuf>,
-    #[serde(default)]
-    window_size_data: JsonObject,
-    #[serde(default)]
-    skip_requirements: bool,
-    #[serde(default)]
-    last_news_update: Box<str>,
-    #[serde(default)]
-    allow_pii: bool,
-    // In the current VCC, this path will be reset to default if it's null
-    // and vrc-get prefers another path the VCC's one so keep null if not set
-    #[serde(default)]
-    project_backup_path: Option<Box<str>>,
-    #[serde(default)]
-    show_prerelease_packages: bool,
-    #[serde(default)]
-    track_community_repos: bool,
-    #[serde(default)]
-    selected_providers: u64,
-    #[serde(default)]
-    last_selected_project: Box<str>,
-    #[serde(default)]
-    user_repos: Vec<UserRepoSetting>,
+impl<'de> Deserialize<'de> for AsJson {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let mut object = expect_object(Value::deserialize(deserializer)?).map_err(serde::de::Error::custom)?;
+        Ok(Self {
+            path_to_unity_exe: take_box_str(&mut object, "pathToUnityExe").map_err(serde::de::Error::custom)?,
+            path_to_unity_hub: take_box_str(&mut object, "pathToUnityHub").map_err(serde::de::Error::custom)?,
+            user_projects: take_optional_value(&mut object, "userProjects").map_err(serde::de::Error::custom)?,
+            unity_editors: take_vec(&mut object, "unityEditors").map_err(serde::de::Error::custom)?,
+            preferred_unity_editors: take_map(&mut object, "preferredUnityEditors")
+                .map_err(serde::de::Error::custom)?,
+            default_project_path: take_optional_value(&mut object, "defaultProjectPath")
+                .map_err(serde::de::Error::custom)?,
+            last_ui_state: take_value(&mut object, "lastUIState").map_err(serde::de::Error::custom)?,
+            skip_unity_auto_find: take_value(&mut object, "skipUnityAutoFind")
+                .map_err(serde::de::Error::custom)?,
+            user_package_folders: take_vec(&mut object, "userPackageFolders")
+                .map_err(serde::de::Error::custom)?,
+            window_size_data: take_map(&mut object, "windowSizeData").map_err(serde::de::Error::custom)?,
+            skip_requirements: take_value(&mut object, "skipRequirements").map_err(serde::de::Error::custom)?,
+            last_news_update: take_box_str(&mut object, "lastNewsUpdate").map_err(serde::de::Error::custom)?,
+            allow_pii: take_value(&mut object, "allowPii").map_err(serde::de::Error::custom)?,
+            project_backup_path: take_optional_value(&mut object, "projectBackupPath")
+                .map_err(serde::de::Error::custom)?,
+            show_prerelease_packages: take_value(&mut object, "showPrereleasePackages")
+                .map_err(serde::de::Error::custom)?,
+            track_community_repos: take_value(&mut object, "trackCommunityRepos")
+                .map_err(serde::de::Error::custom)?,
+            selected_providers: take_value(&mut object, "selectedProviders")
+                .map_err(serde::de::Error::custom)?,
+            last_selected_project: take_box_str(&mut object, "lastSelectedProject")
+                .map_err(serde::de::Error::custom)?,
+            user_repos: take_vec(&mut object, "userRepos").map_err(serde::de::Error::custom)?,
+            rest: object,
+        })
+    }
+}
 
-    #[serde(flatten)]
-    rest: JsonObject,
+impl Serialize for AsJson {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut object = self.rest.clone();
+        object.insert(
+            "pathToUnityExe".to_owned(),
+            Value::String(self.path_to_unity_exe.to_string()),
+        );
+        object.insert(
+            "pathToUnityHub".to_owned(),
+            Value::String(self.path_to_unity_hub.to_string()),
+        );
+        if let Some(user_projects) = &self.user_projects {
+            object.insert(
+                "userProjects".to_owned(),
+                serde_json::to_value(user_projects).map_err(serde::ser::Error::custom)?,
+            );
+        } else {
+            object.remove("userProjects");
+        }
+        object.insert(
+            "unityEditors".to_owned(),
+            serde_json::to_value(&self.unity_editors).map_err(serde::ser::Error::custom)?,
+        );
+        object.insert(
+            "preferredUnityEditors".to_owned(),
+            Value::Object(self.preferred_unity_editors.clone()),
+        );
+        object.insert(
+            "defaultProjectPath".to_owned(),
+            self.default_project_path
+                .as_ref()
+                .map(|x| Value::String(x.to_string()))
+                .unwrap_or(Value::Null),
+        );
+        object.insert(
+            "lastUIState".to_owned(),
+            Value::Number(Number::from(self.last_ui_state)),
+        );
+        object.insert(
+            "skipUnityAutoFind".to_owned(),
+            Value::Bool(self.skip_unity_auto_find),
+        );
+        object.insert(
+            "userPackageFolders".to_owned(),
+            serde_json::to_value(&self.user_package_folders).map_err(serde::ser::Error::custom)?,
+        );
+        object.insert(
+            "windowSizeData".to_owned(),
+            Value::Object(self.window_size_data.clone()),
+        );
+        object.insert(
+            "skipRequirements".to_owned(),
+            Value::Bool(self.skip_requirements),
+        );
+        object.insert(
+            "lastNewsUpdate".to_owned(),
+            Value::String(self.last_news_update.to_string()),
+        );
+        object.insert("allowPii".to_owned(), Value::Bool(self.allow_pii));
+        object.insert(
+            "projectBackupPath".to_owned(),
+            self.project_backup_path
+                .as_ref()
+                .map(|x| Value::String(x.to_string()))
+                .unwrap_or(Value::Null),
+        );
+        object.insert(
+            "showPrereleasePackages".to_owned(),
+            Value::Bool(self.show_prerelease_packages),
+        );
+        object.insert(
+            "trackCommunityRepos".to_owned(),
+            Value::Bool(self.track_community_repos),
+        );
+        object.insert(
+            "selectedProviders".to_owned(),
+            Value::Number(Number::from(self.selected_providers)),
+        );
+        object.insert(
+            "lastSelectedProject".to_owned(),
+            Value::String(self.last_selected_project.to_string()),
+        );
+        object.insert(
+            "userRepos".to_owned(),
+            serde_json::to_value(&self.user_repos).map_err(serde::ser::Error::custom)?,
+        );
+        Value::Object(object).serialize(serializer)
+    }
+}
+
+fn take_box_str(object: &mut JsonObject, key: &str) -> Result<Box<str>, String> {
+    Ok(match object.remove(key) {
+        Some(value) => deserialize_value(value)?,
+        None => "".into(),
+    })
+}
+
+fn take_optional_value<T: serde::de::DeserializeOwned>(
+    object: &mut JsonObject,
+    key: &str,
+) -> Result<Option<T>, String> {
+    match object.remove(key) {
+        Some(value) => deserialize_value(value),
+        None => Ok(None),
+    }
+}
+
+fn take_value<T: serde::de::DeserializeOwned + Default>(
+    object: &mut JsonObject,
+    key: &str,
+) -> Result<T, String> {
+    match object.remove(key) {
+        Some(value) => deserialize_value(value),
+        None => Ok(T::default()),
+    }
+}
+
+fn take_vec<T: serde::de::DeserializeOwned>(
+    object: &mut JsonObject,
+    key: &str,
+) -> Result<Vec<T>, String> {
+    Ok(match object.remove(key) {
+        Some(value) => deserialize_value(value)?,
+        None => Vec::new(),
+    })
+}
+
+fn take_map(object: &mut JsonObject, key: &str) -> Result<JsonObject, String> {
+    Ok(match object.remove(key) {
+        Some(value) => expect_object(value)?,
+        None => Map::new(),
+    })
 }
 
 #[derive(Default, Debug, Clone)]
@@ -94,7 +227,6 @@ impl VpmSettings {
     pub async fn load_alt(io: &DefaultEnvironmentIo) -> io::Result<Option<Self>> {
         let mut settings = Self::load_inner(io, ALT_JSON_PATH).await?;
 
-        // We use data from vcc.litedb for the source of the projecs list since it's much reliable source.
         if let Some(ref mut settings) = settings {
             settings.parsed.user_projects = None;
         }

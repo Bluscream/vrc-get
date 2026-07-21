@@ -1,6 +1,5 @@
 mod copy_recursive;
 mod crlf_json_formatter;
-mod deup_deserializer;
 mod extract_zip;
 mod save_controller;
 mod sha256_async_write;
@@ -10,11 +9,11 @@ use crate::io::{DirEntry, IoTrait};
 use async_zip::error::ZipError;
 pub(crate) use copy_recursive::copy_recursive;
 pub(crate) use crlf_json_formatter::to_vec_pretty_os_eol;
-pub(crate) use deup_deserializer::DedupForwarder;
 use either::Either;
 pub(crate) use extract_zip::extract_zip;
 use futures::prelude::*;
 use futures::stream::FuturesUnordered;
+use indexmap::IndexMap;
 use pin_project_lite::pin_project;
 pub(crate) use save_controller::SaveController;
 use serde::Serialize;
@@ -277,6 +276,82 @@ pub(crate) fn to_io_err(err: serde_path_to_error::Error<serde_json::Error>) -> i
     }
 }
 
+pub(crate) fn deserialize_value<T: serde::de::DeserializeOwned>(value: Value) -> Result<T, String> {
+    deserialize_json(value).map_err(|err| err.to_string())
+}
+
+pub(crate) fn expect_object(value: Value) -> Result<Map<String, Value>, String> {
+    match value {
+        Value::Object(map) => Ok(map),
+        _ => Err("expected JSON object".to_owned()),
+    }
+}
+
+pub(crate) fn take_required<T: serde::de::DeserializeOwned>(
+    object: &mut Map<String, Value>,
+    key: &str,
+) -> Result<T, String> {
+    match object.remove(key) {
+        Some(value) => deserialize_value(value).map_err(|err| format!("invalid {key}: {err}")),
+        None => Err(format!("missing {key}")),
+    }
+}
+
+pub(crate) fn take_default<T: serde::de::DeserializeOwned + Default>(
+    object: &mut Map<String, Value>,
+    key: &str,
+) -> Result<T, String> {
+    match object.remove(key) {
+        Some(value) => deserialize_value(value).map_err(|err| format!("invalid {key}: {err}")),
+        None => Ok(T::default()),
+    }
+}
+
+pub(crate) fn take_default_with<T: Default>(
+    object: &mut Map<String, Value>,
+    key: &str,
+    f: impl FnOnce(Value) -> Result<T, String>,
+) -> Result<T, String> {
+    match object.remove(key) {
+        Some(value) => f(value).map_err(|err| format!("invalid {key}: {err}")),
+        None => Ok(T::default()),
+    }
+}
+
+pub(crate) fn take_optional<T: serde::de::DeserializeOwned>(
+    object: &mut Map<String, Value>,
+    key: &str,
+) -> Result<Option<T>, String> {
+    match object.remove(key) {
+        Some(value) => deserialize_value(value)
+            .map(Some)
+            .map_err(|err| format!("invalid {key}: {err}")),
+        None => Ok(None),
+    }
+}
+
+pub(crate) fn take_optional_with<T>(
+    object: &mut Map<String, Value>,
+    key: &str,
+    f: impl FnOnce(Value) -> Result<T, String>,
+) -> Result<Option<T>, String> {
+    match object.remove(key) {
+        Some(value) => f(value)
+            .map(Some)
+            .map_err(|err| format!("invalid {key}: {err}")),
+        None => Ok(None),
+    }
+}
+
+pub(crate) fn value_to_index_map<T: serde::de::DeserializeOwned>(
+    value: Value,
+) -> Result<IndexMap<Box<str>, T>, String> {
+    expect_object(value)?
+        .into_iter()
+        .map(|(key, value)| deserialize_value(value).map(|value| (key.into_boxed_str(), value)))
+        .collect()
+}
+
 pub(crate) async fn read_to_end(mut file: impl AsyncRead + Unpin) -> io::Result<Vec<u8>> {
     let mut vec = Vec::new();
     file.read_to_end(&mut vec).await?;
@@ -299,6 +374,16 @@ pub(crate) fn parse_json_file<T: serde::de::DeserializeOwned>(
     }
 }
 
+pub(crate) fn parse_json_file_as_value(mut slice: &[u8], path: &Path) -> io::Result<Value> {
+    slice = slice.strip_prefix(b"\xEF\xBB\xBF").unwrap_or(slice);
+    serde_json::from_slice(slice).map_err(|e| {
+        io::Error::new(
+            io::ErrorKind::InvalidData,
+            format!("syntax error loading {}: {e}", path.display()),
+        )
+    })
+}
+
 // returns true when no data stored in the file
 // typical case is filled with '0' when system crashes, but user may manually reset the file
 fn is_blank(buf: &[u8]) -> bool {
@@ -313,6 +398,20 @@ pub(crate) async fn try_load_json<T: serde::de::DeserializeOwned>(
         Ok(file) => match read_to_end(file).await? {
             vec if is_blank(&vec) => Ok(None),
             vec => Ok(Some(parse_json_file(&vec, path)?)),
+        },
+        Err(ref e) if e.kind() == io::ErrorKind::NotFound => Ok(None),
+        Err(e) => Err(e),
+    }
+}
+
+pub(crate) async fn try_load_json_value(
+    io: &impl IoTrait,
+    path: &Path,
+) -> io::Result<Option<Value>> {
+    match io.open(path).await {
+        Ok(file) => match read_to_end(file).await? {
+            vec if is_blank(&vec) => Ok(None),
+            vec => Ok(Some(parse_json_file_as_value(&vec, path)?)),
         },
         Err(ref e) if e.kind() == io::ErrorKind::NotFound => Ok(None),
         Err(e) => Err(e),
