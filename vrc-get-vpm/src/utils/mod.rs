@@ -5,6 +5,8 @@ mod extract_zip;
 mod save_controller;
 mod sha256_async_write;
 
+pub mod json;
+
 use crate::io;
 use crate::io::{DirEntry, IoTrait};
 use async_zip::error::ZipError;
