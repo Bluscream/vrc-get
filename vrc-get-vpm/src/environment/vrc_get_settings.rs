@@ -1,7 +1,6 @@
 use crate::io;
-use crate::io::{DefaultEnvironmentIo, IoTrait};
-use crate::utils::json::{JsonError, JsonValue, parse_json_file_as_value};
-use crate::utils::read_to_end;
+use crate::io::DefaultEnvironmentIo;
+use crate::utils::json::{JsonError, JsonValue, try_load_json};
 
 /// since this file is vrc-get specific, additional keys can be removed
 #[derive(Debug, Default, Clone)]
@@ -35,22 +34,13 @@ const JSON_PATH: &str = "vrc-get/settings.json";
 
 impl VrcGetSettings {
     pub async fn load(io: &DefaultEnvironmentIo) -> io::Result<Self> {
-        let parsed = match io.open(JSON_PATH.as_ref()).await {
-            Ok(file) => match read_to_end(file).await? {
-                vec if vec.is_empty() => Default::default(),
-                vec => {
-                    log::warn!("vrc-get specific settings file is experimental feature!");
-                    let value = parse_json_file_as_value(&vec, JSON_PATH)?;
-                    AsJson::from_json_value(value).map_err(|err| {
-                        io::Error::new(
-                            io::ErrorKind::InvalidData,
-                            format!("syntax error loading {}: {err}", JSON_PATH),
-                        )
-                    })?
-                }
-            },
-            Err(ref e) if e.kind() == io::ErrorKind::NotFound => Default::default(),
-            Err(e) => return Err(e),
+        let parsed = if let Some(value) =
+            try_load_json(io, JSON_PATH.as_ref(), AsJson::from_json_value).await?
+        {
+            log::warn!("vrc-get specific settings file is experimental feature!");
+            value
+        } else {
+            Default::default()
         };
 
         Ok(Self { parsed })

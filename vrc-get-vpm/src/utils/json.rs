@@ -1,6 +1,6 @@
 use crate::io;
-use crate::io::IoTrait;
-use crate::utils::read_to_end;
+use crate::io::{AsyncRead, IoTrait};
+use futures::AsyncReadExt;
 use json_path::JsonPath;
 use std::borrow::{Borrow, Cow};
 use std::fmt::{Debug, Display, Formatter};
@@ -529,30 +529,33 @@ fn is_blank(buf: &[u8]) -> bool {
     buf.is_empty() || buf.iter().all(|&b| matches!(b, b' ' | 0))
 }
 
+async fn read_to_end(mut file: impl AsyncRead + Unpin) -> io::Result<Vec<u8>> {
+    let mut vec = Vec::new();
+    file.read_to_end(&mut vec).await?;
+    Ok(vec)
+}
+
+pub(crate) async fn load_json<T>(
+    io: &impl IoTrait,
+    path: &Path,
+    parser: impl FnOnce(JsonValue) -> Result<T>,
+) -> io::Result<T> {
+    parse_json_file(
+        &read_to_end(io.open(path).await?).await?,
+        path.display(),
+        parser,
+    )
+}
+
 pub(crate) async fn try_load_json<T>(
     io: &impl IoTrait,
     path: &Path,
     parser: impl FnOnce(JsonValue) -> Result<T>,
 ) -> io::Result<Option<T>> {
-    let Some(json) = try_load_json_value(io, path).await? else {
-        return Ok(None);
-    };
-    Ok(Some(parser(json).map_err(|e| {
-        io::Error::new(
-            io::ErrorKind::InvalidData,
-            format!("syntax error loading {path}: {e}", path = path.display()),
-        )
-    })?))
-}
-
-pub(crate) async fn try_load_json_value(
-    io: &impl IoTrait,
-    path: &Path,
-) -> io::Result<Option<JsonValue>> {
     match io.open(path).await {
         Ok(file) => match read_to_end(file).await? {
             vec if is_blank(&vec) => Ok(None),
-            vec => Ok(Some(parse_json_file_as_value(&vec, path.display())?)),
+            vec => Ok(Some(parse_json_file(&vec, path.display(), parser)?)),
         },
         Err(ref e) if e.kind() == io::ErrorKind::NotFound => Ok(None),
         Err(e) => Err(e),
@@ -564,27 +567,19 @@ pub(crate) fn parse_json_file<T>(
     source: impl Display,
     parser: impl FnOnce(JsonValue) -> Result<T>,
 ) -> io::Result<T> {
-    parser(parse_json_file_as_value(slice, &source)?).map_err(|e| {
+    let slice = slice.strip_prefix(b"\xEF\xBB\xBF").unwrap_or(slice);
+    let json = serde_json::from_slice(slice).map_err(|e| {
+        io::Error::new(
+            io::ErrorKind::InvalidData,
+            format!("syntax error loading {source}: {e}"),
+        )
+    })?;
+    parser(json_value(json, Default::default())).map_err(|e| {
         io::Error::new(
             io::ErrorKind::InvalidData,
             format!("syntax error loading {source}: {e}"),
         )
     })
-}
-
-pub(crate) fn parse_json_file_as_value(
-    mut slice: &[u8],
-    source: impl Display,
-) -> io::Result<JsonValue> {
-    slice = slice.strip_prefix(b"\xEF\xBB\xBF").unwrap_or(slice);
-    serde_json::from_slice(slice)
-        .map(|value| json_value(value, Default::default()))
-        .map_err(|e| {
-            io::Error::new(
-                io::ErrorKind::InvalidData,
-                format!("syntax error loading {source}: {e}"),
-            )
-        })
 }
 
 pub(crate) fn to_vec_pretty_os_eol(value: &JsonValue) -> io::Result<Vec<u8>> {

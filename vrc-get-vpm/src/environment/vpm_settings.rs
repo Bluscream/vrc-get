@@ -2,9 +2,7 @@ use crate::UserRepoSetting;
 use crate::environment::PackageCollection;
 use crate::io;
 use crate::io::DefaultEnvironmentIo;
-use crate::utils::json::{
-    JsonArray, JsonError, JsonObject, JsonValue, save_json, try_load_json_value,
-};
+use crate::utils::json::{JsonArray, JsonError, JsonObject, JsonValue, save_json, try_load_json};
 use std::path::{Path, PathBuf};
 
 #[derive(Debug, Clone, Default)]
@@ -193,16 +191,10 @@ impl VpmSettings {
     }
 
     async fn load_inner(io: &DefaultEnvironmentIo, path: &str) -> io::Result<Option<Self>> {
-        let Some(value) = try_load_json_value(io, path.as_ref()).await? else {
+        let Some(parsed) = try_load_json(io, path.as_ref(), AsJson::from_json_value).await? else {
             log::debug!("VpmSettings Configuration file not found at {path}");
             return Ok(None);
         };
-        let parsed = AsJson::from_json_value(value).map_err(|err| {
-            io::Error::new(
-                io::ErrorKind::InvalidData,
-                format!("syntax error loading {path}: {err}"),
-            )
-        })?;
 
         log::debug!("Parsed VpmSettings at {path}");
 
