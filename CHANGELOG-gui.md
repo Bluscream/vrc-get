@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog].
 
 ## [Unreleased]
 ### Added
+- Spanish localization [`#3099`](https://github.com/vrc-get/vrc-get/pull/3099)
 
 ### Changed
 
