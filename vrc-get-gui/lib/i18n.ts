@@ -15,7 +15,7 @@ import zh_hantJson from "@/locales/zh_hant.json5";
 
 const languageResources = {
 	en: enJson,
-  es: esJson,
+	es: esJson,
 	de: deJson,
 	ja: jaJson,
 	ko: koJson,
