@@ -86,6 +86,20 @@ export const commands = {
 	projectMigrateProjectToVpm: (projectPath: string) => __TAURI_INVOKE<null>("project_migrate_project_to_vpm", { projectPath }),
 	projectOpenUnity: (projectPath: string, unityPath: string) => __TAURI_INVOKE<boolean>("project_open_unity", { projectPath, unityPath }),
 	projectIsUnityLaunching: (projectPath: string) => __TAURI_INVOKE<boolean>("project_is_unity_launching", { projectPath }),
+	/**
+	 *  Asks the Unity Editor(s) opened for the specified project to quit gracefully,
+	 *  giving Unity the chance to save and shut down cleanly.
+	 * 
+	 *  Returns whether any process was asked to quit.
+	 */
+	projectCloseUnity: (projectPath: string) => __TAURI_INVOKE<boolean>("project_close_unity", { projectPath }),
+	/**
+	 *  Forcibly kills the Unity Editor process(es) opened for the specified project.
+	 * 
+	 *  This does not give Unity a chance to save, so it should only be used after
+	 *  [`project_close_unity`] did not take effect.
+	 */
+	projectKillUnity: (projectPath: string) => __TAURI_INVOKE<boolean>("project_kill_unity", { projectPath }),
 	projectCreateBackup: (channel: string, projectPath: string) => __TAURI_INVOKE<AsyncCallResult<TauriCreateBackupProgress, null>>("project_create_backup", { channel, projectPath }),
 	projectGetCustomUnityArgs: (projectPath: string) => __TAURI_INVOKE<string[] | null>("project_get_custom_unity_args", { projectPath }),
 	projectSetCustomUnityArgs: (projectPath: string, args: string[] | null) => __TAURI_INVOKE<boolean>("project_set_custom_unity_args", { projectPath, args }),

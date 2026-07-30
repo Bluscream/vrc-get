@@ -255,3 +255,18 @@ pub fn initialize(_: tauri::AppHandle) {
 pub fn is_noexec(_path: &Path) -> bool {
     false
 }
+
+/// Asks the process to quit gracefully, letting it run its own shutdown logic.
+///
+/// `taskkill` without `/F` posts `WM_CLOSE` to the windows of the process,
+/// which is what asks Unity to shut down the way the window close button does.
+pub(crate) fn request_process_quit(process: &sysinfo::Process) -> bool {
+    use std::os::windows::process::CommandExt as _;
+
+    std::process::Command::new("taskkill")
+        .args(["/PID", &process.pid().to_string()])
+        .creation_flags(CREATE_NO_WINDOW)
+        .status()
+        .map(|status| status.success())
+        .unwrap_or(false)
+}

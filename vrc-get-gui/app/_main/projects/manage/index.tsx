@@ -51,11 +51,13 @@ import {
 } from "@/components/unity-arguments-settings";
 import type { TauriProjectDetails, TauriUnityVersions } from "@/lib/bindings";
 import { commands } from "@/lib/bindings";
+import { projectIsUnityLaunching } from "@/lib/close-unity";
 import { VRCSDK_PACKAGES, VRCSDK_UNITY_VERSIONS } from "@/lib/constants";
 import { type DialogContext, openSingleDialog } from "@/lib/dialog";
 import { tc } from "@/lib/i18n";
+import { openUnity } from "@/lib/open-unity";
 import { nameFromPath } from "@/lib/os";
-import { toastSuccess, toastThrownError } from "@/lib/toast";
+import { toastNormal, toastSuccess, toastThrownError } from "@/lib/toast";
 import { compareUnityVersionString, parseUnityVersion } from "@/lib/version";
 import { combinePackagesAndProjectDetails } from "./-collect-package-row-info";
 import { PackageListCard } from "./-package-list-card";
@@ -630,10 +632,14 @@ function projectGetUnityPath(projectPath: string) {
 
 function DropdownMenuContentBody({
 	projectPath,
+	unityVersion,
+	unityRevision,
 	removeProject,
 	onChangeLaunchOptions,
 }: {
 	projectPath: string;
+	unityVersion?: string | null;
+	unityRevision?: string | null;
 	removeProject?: () => void;
 	onChangeLaunchOptions?: () => void;
 }) {
@@ -685,11 +691,46 @@ function DropdownMenuContentBody({
 
 	const unityPath = unityPathQuery.data;
 
+	const unityRunning =
+		useQuery(projectIsUnityLaunching(projectPath)).data ?? false;
+
+	// While Unity is open the main button is "Close Unity", so opening it moves in here.
+	const onOpenUnity = async () => {
+		await openUnity(projectPath, unityVersion ?? null, unityRevision);
+	};
+
+	const onKillUnity = async () => {
+		try {
+			const killed = await commands.projectKillUnity(projectPath);
+			if (killed) {
+				toastSuccess(tc("projects:toast:unity killed"));
+			} else {
+				toastNormal(tc("projects:toast:unity not running"));
+			}
+		} catch (e) {
+			console.error(e);
+			toastThrownError(e);
+		}
+	};
+
 	return (
 		<>
 			<DropdownMenuItem onClick={onChangeLaunchOptions}>
 				{tc("projects:menuitem:change launch options")}
 			</DropdownMenuItem>
+			{unityRunning && (
+				<>
+					<DropdownMenuItem onClick={onOpenUnity}>
+						{tc("projects:button:open unity")}
+					</DropdownMenuItem>
+					<DropdownMenuItem
+						onClick={onKillUnity}
+						className={"text-destructive focus:text-destructive"}
+					>
+						{tc("projects:menuitem:kill unity")}
+					</DropdownMenuItem>
+				</>
+			)}
 			{unityPath && (
 				<DropdownMenuItem onClick={() => setUnityPath.mutate(null)}>
 					{tc("projects:menuitem:forget unity path")}
@@ -755,6 +796,8 @@ function ProjectButton({
 			<DropdownMenuContent>
 				<DropdownMenuContentBody
 					projectPath={projectPath}
+					unityVersion={unityVersion}
+					unityRevision={unityRevision}
 					removeProject={() => {
 						void openSingleDialog(RemoveProjectDialog, {
 							project: {

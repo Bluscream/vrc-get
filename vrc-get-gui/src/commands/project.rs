@@ -533,6 +533,99 @@ pub fn project_is_unity_launching(project_path: String) -> bool {
     is_unity_running(project_path)
 }
 
+/// Finds the Unity Editor process(es) opened for the specified project.
+///
+/// Since we start Unity detached, we don't keep the child handle around,
+/// so we look for the process by the `-projectPath` argument we passed.
+fn with_unity_processes_of<R>(
+    project_path: &str,
+    f: impl Fn(&sysinfo::Process) -> R,
+) -> Vec<(sysinfo::Pid, R)> {
+    let project_path =
+        std::fs::canonicalize(project_path).unwrap_or_else(|_| PathBuf::from(project_path));
+
+    let mut system = sysinfo::System::new();
+    // The default refresh kind does not read the command line, which is what we match on.
+    system.refresh_processes_specifics(
+        sysinfo::ProcessesToUpdate::All,
+        true,
+        sysinfo::ProcessRefreshKind::nothing().with_cmd(sysinfo::UpdateKind::Always),
+    );
+
+    let mut result = Vec::new();
+
+    for process in system.processes().values() {
+        // Threads share the command line of their process, and signalling one is not what we want.
+        if process.thread_kind().is_some() {
+            continue;
+        }
+
+        let name = process.name().to_string_lossy().to_ascii_lowercase();
+        if !name.starts_with("unity") {
+            continue;
+        }
+
+        let matches = process.cmd().windows(2).any(|pair| {
+            pair[0].eq_ignore_ascii_case("-projectPath")
+                && std::fs::canonicalize(Path::new(&pair[1]))
+                    .map(|x| x == project_path)
+                    .unwrap_or_else(|_| Path::new(&pair[1]) == project_path)
+        });
+
+        if matches {
+            result.push((process.pid(), f(process)));
+        }
+    }
+
+    result
+}
+
+/// Asks the Unity Editor(s) opened for the specified project to quit gracefully,
+/// giving Unity the chance to save and shut down cleanly.
+///
+/// Returns whether any process was asked to quit.
+#[tauri::command]
+#[specta::specta]
+pub async fn project_close_unity(project_path: String) -> Result<bool, RustError> {
+    tokio::task::spawn_blocking(move || {
+        let results = with_unity_processes_of(&project_path, |process| {
+            info!("Requesting Unity process {} to quit", process.pid());
+            let requested = crate::os::request_process_quit(process);
+            if !requested {
+                error!("Failed to request Unity process {} to quit", process.pid());
+            }
+            requested
+        });
+
+        Ok(results.into_iter().any(|(_, requested)| requested))
+    })
+    .await
+    .unwrap()
+}
+
+/// Forcibly kills the Unity Editor process(es) opened for the specified project.
+///
+/// This does not give Unity a chance to save, so it should only be used after
+/// [`project_close_unity`] did not take effect.
+#[tauri::command]
+#[specta::specta]
+pub async fn project_kill_unity(project_path: String) -> Result<bool, RustError> {
+    tokio::task::spawn_blocking(move || {
+        let results = with_unity_processes_of(&project_path, |process| {
+            info!("Killing Unity process {}", process.pid());
+            let killed = process.kill();
+            if !killed {
+                error!("Failed to kill Unity process {}", process.pid());
+            }
+            killed
+        });
+
+        Ok(results.into_iter().any(|(_, killed)| killed))
+    })
+    .await
+    .unwrap()
+}
+
 async fn create_backup_zip(
     backup_path: &Path,
     project_path: &Path,

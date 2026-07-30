@@ -1,8 +1,9 @@
-import { queryOptions, useQueryClient } from "@tanstack/react-query";
+import { queryOptions, useQuery, useQueryClient } from "@tanstack/react-query";
 import type React from "react";
 import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { commands } from "@/lib/bindings";
+import { closeUnity, projectIsUnityLaunching } from "@/lib/close-unity";
 import { tc } from "@/lib/i18n";
 import { openUnity } from "@/lib/open-unity";
 
@@ -64,6 +65,9 @@ export function OpenUnityButton({
 
 	const queryClient = useQueryClient();
 
+	const unityRunningQuery = useQuery(projectIsUnityLaunching(projectPath));
+	const unityRunning = unityRunningQuery.data ?? false;
+
 	const openUnityWithUpdateList = async () => {
 		await openUnity(projectPath, unityVersion, unityRevision);
 		setTimeout(() => {
@@ -71,13 +75,23 @@ export function OpenUnityButton({
 		}, 3000);
 	};
 
+	const closeUnityWithUpdateList = async () => {
+		await closeUnity(projectPath);
+		await queryClient.invalidateQueries(projectIsUnityLaunching(projectPath));
+		queryClient.invalidateQueries(environmentProjects);
+	};
+
 	return (
 		<PreventDoubleClick
 			delayMs={1000}
-			onClick={openUnityWithUpdateList}
+			onClick={
+				unityRunning ? closeUnityWithUpdateList : openUnityWithUpdateList
+			}
 			{...props}
 		>
-			{tc("projects:button:open unity")}
+			{unityRunning
+				? tc("projects:button:close unity")
+				: tc("projects:button:open unity")}
 		</PreventDoubleClick>
 	);
 }
