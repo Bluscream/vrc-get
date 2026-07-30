@@ -464,7 +464,12 @@ pub async fn project_migrate_project_to_vpm(
 }
 
 fn is_unity_running(project_path: impl AsRef<Path>) -> bool {
-    crate::os::is_locked(&project_path.as_ref().join("Temp/UnityLockFile")).unwrap_or(false)
+    let temp = project_path.as_ref().join("Temp");
+    // Unity spells the lock file differently depending on the platform, and unlike
+    // Windows and macOS, Linux filesystems are usually case-sensitive.
+    ["UnityLockfile", "UnityLockFile"]
+        .iter()
+        .any(|name| crate::os::is_locked(&temp.join(name)).unwrap_or(false))
 }
 
 #[tauri::command]

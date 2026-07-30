@@ -8,7 +8,7 @@ use std::path::Path;
 use std::process::Command;
 use std::sync::OnceLock;
 
-use nix::libc::{F_UNLCK, c_short, flock};
+use nix::libc::{F_UNLCK, F_WRLCK, c_short, flock};
 
 pub(crate) use os_more::start_command;
 
@@ -27,14 +27,27 @@ pub(crate) fn is_locked(path: &Path) -> io::Result<bool> {
         l_start: 0,
         l_len: 0,
         l_pid: 0,
-        l_type: F_UNLCK as c_short, // macOS denies l_type: 0
+        // Query for a write lock: it reports both read and write locks held by
+        // others. macOS denies l_type: 0, and Linux denies F_UNLCK, with EINVAL.
+        l_type: F_WRLCK as c_short,
         l_whence: 0,
     };
     let file = OpenOptions::new().read(true).open(path)?;
 
-    nix::fcntl::fcntl(file, nix::fcntl::F_GETLK(&mut lock))?;
+    nix::fcntl::fcntl(&file, nix::fcntl::F_GETLK(&mut lock))?;
 
-    Ok(lock.l_type != F_UNLCK as c_short)
+    if lock.l_type != F_UNLCK as c_short {
+        return Ok(true);
+    }
+
+    // Unity on Linux takes a BSD lock (flock) instead of a POSIX record lock,
+    // and F_GETLK cannot see those, so test for it by trying to take it ourselves.
+    match nix::fcntl::Flock::lock(file, nix::fcntl::FlockArg::LockExclusiveNonblock) {
+        // We got the lock, so nobody else holds it. Dropping it unlocks again.
+        Ok(_lock) => Ok(false),
+        Err((_, nix::errno::Errno::EWOULDBLOCK)) => Ok(true),
+        Err((_, e)) => Err(e.into()),
+    }
 }
 
 #[cfg(target_os = "macos")]
@@ -53,3 +66,8 @@ pub fn os_info() -> &'static str {
 pub use os_more::initialize;
 pub use os_more::is_noexec;
 pub use os_more::open_that;
+
+/// Asks the process to quit gracefully, letting it run its own shutdown logic.
+pub(crate) fn request_process_quit(process: &sysinfo::Process) -> bool {
+    process.kill_with(sysinfo::Signal::Term).unwrap_or(false)
+}
