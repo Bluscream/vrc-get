@@ -27,6 +27,7 @@ import { Route as MainProjectsManageIndexRouteImport } from './../app/_main/proj
 import { Route as MainPackagesUserPackagesIndexRouteImport } from './../app/_main/packages/user-packages/index'
 import { Route as MainPackagesTemplatesIndexRouteImport } from './../app/_main/packages/templates/index'
 import { Route as MainPackagesRepositoriesIndexRouteImport } from './../app/_main/packages/repositories/index'
+import { Route as MainPackagesCatalogIndexRouteImport } from './../app/_main/packages/catalog/index'
 
 const SetupRouteRoute = SetupRouteRouteImport.update({
   id: '/_setup',
@@ -123,6 +124,12 @@ const MainPackagesRepositoriesIndexRoute =
     path: '/packages/repositories/',
     getParentRoute: () => MainRouteRoute,
   } as any)
+const MainPackagesCatalogIndexRoute =
+  MainPackagesCatalogIndexRouteImport.update({
+    id: '/packages/catalog/',
+    path: '/packages/catalog/',
+    getParentRoute: () => MainRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -130,6 +137,7 @@ export interface FileRoutesByFullPath {
   '/log/': typeof MainLogIndexRoute
   '/projects/': typeof MainProjectsIndexRoute
   '/settings/': typeof MainSettingsIndexRoute
+  '/packages/catalog/': typeof MainPackagesCatalogIndexRoute
   '/packages/repositories/': typeof MainPackagesRepositoriesIndexRoute
   '/packages/templates/': typeof MainPackagesTemplatesIndexRoute
   '/packages/user-packages/': typeof MainPackagesUserPackagesIndexRoute
@@ -148,6 +156,7 @@ export interface FileRoutesByTo {
   '/log': typeof MainLogIndexRoute
   '/projects': typeof MainProjectsIndexRoute
   '/settings': typeof MainSettingsIndexRoute
+  '/packages/catalog': typeof MainPackagesCatalogIndexRoute
   '/packages/repositories': typeof MainPackagesRepositoriesIndexRoute
   '/packages/templates': typeof MainPackagesTemplatesIndexRoute
   '/packages/user-packages': typeof MainPackagesUserPackagesIndexRoute
@@ -169,6 +178,7 @@ export interface FileRoutesById {
   '/_main/log/': typeof MainLogIndexRoute
   '/_main/projects/': typeof MainProjectsIndexRoute
   '/_main/settings/': typeof MainSettingsIndexRoute
+  '/_main/packages/catalog/': typeof MainPackagesCatalogIndexRoute
   '/_main/packages/repositories/': typeof MainPackagesRepositoriesIndexRoute
   '/_main/packages/templates/': typeof MainPackagesTemplatesIndexRoute
   '/_main/packages/user-packages/': typeof MainPackagesUserPackagesIndexRoute
@@ -189,6 +199,7 @@ export interface FileRouteTypes {
     | '/log/'
     | '/projects/'
     | '/settings/'
+    | '/packages/catalog/'
     | '/packages/repositories/'
     | '/packages/templates/'
     | '/packages/user-packages/'
@@ -207,6 +218,7 @@ export interface FileRouteTypes {
     | '/log'
     | '/projects'
     | '/settings'
+    | '/packages/catalog'
     | '/packages/repositories'
     | '/packages/templates'
     | '/packages/user-packages'
@@ -227,6 +239,7 @@ export interface FileRouteTypes {
     | '/_main/log/'
     | '/_main/projects/'
     | '/_main/settings/'
+    | '/_main/packages/catalog/'
     | '/_main/packages/repositories/'
     | '/_main/packages/templates/'
     | '/_main/packages/user-packages/'
@@ -374,6 +387,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MainPackagesRepositoriesIndexRouteImport
       parentRoute: typeof MainRouteRoute
     }
+    '/_main/packages/catalog/': {
+      id: '/_main/packages/catalog/'
+      path: '/packages/catalog'
+      fullPath: '/packages/catalog/'
+      preLoaderRoute: typeof MainPackagesCatalogIndexRouteImport
+      parentRoute: typeof MainRouteRoute
+    }
   }
 }
 
@@ -382,6 +402,7 @@ interface MainRouteRouteChildren {
   MainLogIndexRoute: typeof MainLogIndexRoute
   MainProjectsIndexRoute: typeof MainProjectsIndexRoute
   MainSettingsIndexRoute: typeof MainSettingsIndexRoute
+  MainPackagesCatalogIndexRoute: typeof MainPackagesCatalogIndexRoute
   MainPackagesRepositoriesIndexRoute: typeof MainPackagesRepositoriesIndexRoute
   MainPackagesTemplatesIndexRoute: typeof MainPackagesTemplatesIndexRoute
   MainPackagesUserPackagesIndexRoute: typeof MainPackagesUserPackagesIndexRoute
@@ -394,6 +415,7 @@ const MainRouteRouteChildren: MainRouteRouteChildren = {
   MainLogIndexRoute: MainLogIndexRoute,
   MainProjectsIndexRoute: MainProjectsIndexRoute,
   MainSettingsIndexRoute: MainSettingsIndexRoute,
+  MainPackagesCatalogIndexRoute: MainPackagesCatalogIndexRoute,
   MainPackagesRepositoriesIndexRoute: MainPackagesRepositoriesIndexRoute,
   MainPackagesTemplatesIndexRoute: MainPackagesTemplatesIndexRoute,
   MainPackagesUserPackagesIndexRoute: MainPackagesUserPackagesIndexRoute,
