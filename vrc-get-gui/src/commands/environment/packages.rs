@@ -179,6 +179,39 @@ pub enum TauriDuplicatedReason {
 
 #[tauri::command]
 #[specta::specta]
+pub async fn environment_fetch_repository_info(
+    http: State<'_, reqwest::Client>,
+    url: String,
+    headers: IndexMap<Box<str>, Box<str>>,
+) -> Result<Option<TauriRemoteRepositoryInfo>, RustError> {
+    let url: Url = match url.parse() {
+        Ok(url) => url,
+        Err(_) => return Ok(None),
+    };
+
+    let repo = match RemoteRepository::download(http.inner(), &url, &headers).await {
+        Ok((repo, _)) => repo,
+        Err(_) => return Ok(None),
+    };
+
+    let repo_url = repo.url().unwrap_or(&url).as_str();
+    let id = repo.id().unwrap_or(repo_url);
+
+    Ok(Some(TauriRemoteRepositoryInfo {
+        id: id.to_string(),
+        url: repo_url.to_string(),
+        display_name: repo.name().unwrap_or(id).to_string(),
+        packages: repo
+            .get_packages()
+            .filter_map(|x| x.get_latest(VersionSelector::latest_for(None, true)))
+            .filter(|x| !x.is_yanked())
+            .map(TauriBasePackageInfo::new)
+            .collect(),
+    }))
+}
+
+#[tauri::command]
+#[specta::specta]
 pub async fn environment_download_repository(
     settings: State<'_, SettingsState>,
     io: State<'_, DefaultEnvironmentIo>,

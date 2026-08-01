@@ -1,3 +1,9 @@
+import {
+	commands,
+	type TauriBasePackageInfo,
+	type TauriRemoteRepositoryInfo,
+} from "@/lib/bindings";
+
 export const VRC_GET_CATALOG_URL =
 	"https://raw.githubusercontent.com/vrc-get/vrc-get/master/repositories.txt";
 
@@ -112,4 +118,90 @@ export async function fetchCatalogEntries(): Promise<CatalogRepositoryEntry[]> {
 	}
 
 	return Array.from(map.values());
+}
+
+export async function downloadCatalogRepoInfo(
+	url: string,
+): Promise<TauriRemoteRepositoryInfo | null> {
+	// First try environmentFetchRepositoryInfo via Rust (bypasses CORS and supports all repos)
+	try {
+		const info = await commands.environmentFetchRepositoryInfo(url, {});
+		if (info) {
+			return info;
+		}
+	} catch (_e) {
+		// Fall through to HTTP fetch
+	}
+
+	// Secondary fallback: direct HTTP fetch
+	try {
+		const res = await fetch(url);
+		if (res.ok) {
+			const json = (await res.json()) as Record<string, unknown>;
+			if (json && typeof json === "object") {
+				const displayName = (json.name as string) || (json.id as string) || url;
+				const id = (json.id as string) || url;
+				const packages: TauriBasePackageInfo[] = [];
+
+				if (json.packages && typeof json.packages === "object") {
+					for (const [pkgId, pkgData] of Object.entries(
+						json.packages as Record<string, unknown>,
+					)) {
+						if (
+							pkgData &&
+							typeof pkgData === "object" &&
+							"versions" in pkgData &&
+							pkgData.versions &&
+							typeof pkgData.versions === "object"
+						) {
+							const versionMap = pkgData.versions as Record<
+								string,
+								Record<string, unknown>
+							>;
+							const versionKeys = Object.keys(versionMap);
+							if (versionKeys.length > 0) {
+								const verData = versionMap[versionKeys[0]];
+								if (verData) {
+									packages.push({
+										name: (verData.name as string) || pkgId,
+										display_name:
+											(verData.displayName as string) ||
+											(verData.name as string) ||
+											pkgId,
+										description: (verData.description as string) || null,
+										keywords: Array.isArray(verData.keywords)
+											? (verData.keywords as string[])
+											: [],
+										version: {
+											major: 0,
+											minor: 0,
+											patch: 0,
+											pre: "",
+											build: "",
+										},
+										unity: null,
+										changelog_url: null,
+										documentation_url: null,
+										vpm_dependencies: [],
+										legacy_packages: [],
+										is_yanked: false,
+									});
+								}
+							}
+						}
+					}
+				}
+
+				return {
+					display_name: displayName,
+					id: id,
+					url: url,
+					packages: packages,
+				};
+			}
+		}
+	} catch (e) {
+		console.error(`Failed to download repository info for ${url}:`, e);
+	}
+	return null;
 }
