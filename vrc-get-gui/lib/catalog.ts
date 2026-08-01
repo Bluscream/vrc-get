@@ -1,4 +1,8 @@
-import { commands, type TauriRemoteRepositoryInfo } from "@/lib/bindings";
+import {
+	commands,
+	type TauriBasePackageInfo,
+	type TauriRemoteRepositoryInfo,
+} from "@/lib/bindings";
 
 export const DEFAULT_CATALOG_URL =
 	"https://raw.githubusercontent.com/vrc-get/vrc-get/master/repositories.txt";
@@ -85,10 +89,90 @@ export async function fetchCatalogUrls(): Promise<string[]> {
 export async function downloadCatalogRepoInfo(
 	url: string,
 ): Promise<TauriRemoteRepositoryInfo | null> {
+	// Attempt direct HTTP fetch first (works for all repos, including already added ones)
+	try {
+		const res = await fetch(url);
+		if (res.ok) {
+			const json = (await res.json()) as Record<string, unknown>;
+			if (json && typeof json === "object") {
+				const displayName = (json.name as string) || (json.id as string) || url;
+				const id = (json.id as string) || url;
+				const packages: TauriBasePackageInfo[] = [];
+
+				if (json.packages && typeof json.packages === "object") {
+					for (const [pkgId, pkgData] of Object.entries(
+						json.packages as Record<string, unknown>,
+					)) {
+						if (
+							pkgData &&
+							typeof pkgData === "object" &&
+							"versions" in pkgData &&
+							pkgData.versions &&
+							typeof pkgData.versions === "object"
+						) {
+							const versionMap = pkgData.versions as Record<
+								string,
+								Record<string, unknown>
+							>;
+							const versionKeys = Object.keys(versionMap);
+							if (versionKeys.length > 0) {
+								const verData = versionMap[versionKeys[0]];
+								if (verData) {
+									packages.push({
+										name: (verData.name as string) || pkgId,
+										display_name:
+											(verData.displayName as string) ||
+											(verData.name as string) ||
+											pkgId,
+										description: (verData.description as string) || null,
+										keywords: Array.isArray(verData.keywords)
+											? (verData.keywords as string[])
+											: [],
+										version: {
+											major: 0,
+											minor: 0,
+											patch: 0,
+											pre: "",
+											build: "",
+										},
+										unity: null,
+										changelog_url: null,
+										documentation_url: null,
+										vpm_dependencies: [],
+										legacy_packages: [],
+										is_yanked: false,
+									});
+								}
+							}
+						}
+					}
+				}
+
+				return {
+					display_name: displayName,
+					id: id,
+					url: url,
+					packages: packages,
+				};
+			}
+		}
+	} catch (_e) {
+		// Ignore CORS or fetch errors, fall through to Tauri command
+	}
+
+	// Fallback to Tauri command
 	try {
 		const res = await commands.environmentDownloadRepository(url, {});
 		if (res.type === "Success") {
 			return res.value;
+		}
+		if (res.type === "Duplicated") {
+			return {
+				display_name: res.duplicated_name || url,
+				id: url,
+				url: url,
+				packages: [],
+			};
 		}
 	} catch (e) {
 		console.error(`Failed to download repository info for ${url}:`, e);
