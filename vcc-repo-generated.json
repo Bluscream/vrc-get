@@ -1,0 +1,1297 @@
+[
+  {
+    "url": "https://aariyjp.github.io/vpm-repos/index.json",
+    "name": "あぁりー",
+    "id": "pm.booth.aariyjp.vpm"
+  },
+  {
+    "url": "https://Adjerry91.github.io/VRCFaceTracking-Templates/index.json",
+    "name": "VRCFT - Jerry's Templates Listing",
+    "id": "adjerry91.vrcft.templates.listin"
+  },
+  {
+    "url": "https://aiczk.github.io/VPM/index.json",
+    "name": "VPM",
+    "id": "vpm"
+  },
+  {
+    "url": "https://akiiray.github.io/vpm-repository/index.json",
+    "name": "Akiiray VPM Repository",
+    "id": "com.akiiray.vpm"
+  },
+  {
+    "url": "https://amarinoa.github.io/AmariNoa-VPM-Listing/index.json",
+    "name": "AmariNoa's vpm repo",
+    "id": "com.amari-noa.vpm"
+  },
+  {
+    "url": "https://amehuri.github.io/amehuri_tools/index.json",
+    "name": "Amehuri Tools Listing",
+    "id": "com.amehuri.amehuri-tools.listing"
+  },
+  {
+    "url": "https://An-Labo.github.io/An-Labo-NailTool/vpm.json",
+    "name": "An-Labo NailTool",
+    "id": "world.anlabo.mdnailtool.vpm"
+  },
+  {
+    "url": "https://Andrey04o.github.io/Chess04o-vpm/index.json",
+    "name": "Chess04o Listing",
+    "id": "com.andrey04o.chess04o.listing"
+  },
+  {
+    "url": "https://Andrey04o.github.io/TETR04o-vpm/index.json",
+    "name": "TETR04o Listing",
+    "id": "com.andrey04o.tetr04o.listing"
+  },
+  {
+    "url": "https://AnosionV.github.io/vpm/index.json",
+    "name": "Anosion VPM",
+    "id": "jp.anosion.vpm"
+  },
+  {
+    "url": "https://api.vrlabs.dev/listings/category/Components",
+    "name": "VRLabs Packages: Components",
+    "id": "dev.vrlabs.repos.components"
+  },
+  {
+    "url": "https://api.vrlabs.dev/listings/category/Dependencies",
+    "name": "VRLabs Packages: Dependencies",
+    "id": "dev.vrlabs.repos.dependencies"
+  },
+  {
+    "url": "https://api.vrlabs.dev/listings/category/Essentials",
+    "name": "VRLabs Packages: Essentials",
+    "id": "dev.vrlabs.repos.essentials"
+  },
+  {
+    "url": "https://api.vrlabs.dev/listings/category/Rehosted",
+    "name": "VRLabs Packages: Rehosted",
+    "id": "dev.vrlabs.repos.rehosted"
+  },
+  {
+    "url": "https://api.vrlabs.dev/listings/category/Systems",
+    "name": "VRLabs Packages: Systems",
+    "id": "dev.vrlabs.repos.systems"
+  },
+  {
+    "url": "https://aramaa-vr.github.io/vpm-repos/vpm.json",
+    "name": "Aramaa",
+    "id": "io.github.aramaa.vpm"
+  },
+  {
+    "url": "https://aurorakai.github.io/vpm/index.json",
+    "name": "AuroraKai",
+    "id": "com.aurorakai.vpm"
+  },
+  {
+    "url": "https://autch.github.io/VRC_PopulateScaleAdjusters/index.json",
+    "name": "Populate Scale Adjusters Listing",
+    "id": "net.autch.vrchat.populate-scale-adjusters.listing"
+  },
+  {
+    "url": "https://awa-vr.github.io/vrc-tools-vpm/index.json",
+    "name": "AwA's VRChat Tools",
+    "id": "com.awavr.vpm"
+  },
+  {
+    "url": "https://azukimochi.github.io/vpm-repos/index.json",
+    "name": "Azukimochi",
+    "id": "io.github.azukimochi.main"
+  },
+  {
+    "url": "https://balphagorevr.github.io/balphagore-vcc-listings/index.json",
+    "name": "Balphagore's Listings",
+    "id": "com.balphagore.vcc-listings"
+  },
+  {
+    "url": "https://befuddledlabs.github.io/LinuxVRChatSDKPatch/index.json",
+    "name": "Linux VRChat SDK Patch Listing",
+    "id": "befuddledlabs.linuxvrchatsdkpatch"
+  },
+  {
+    "url": "https://BefuddledLabs.github.io/OpenSyncDance/index.json",
+    "name": "Open Sync Dance Listing",
+    "id": "befuddledlabs.opensyncdance.listing"
+  },
+  {
+    "url": "https://blancrenard.github.io/vpm-NolaTools/index.json",
+    "name": "FurTools",
+    "id": "io.github.blancrenard.vpm-nolatools"
+  },
+  {
+    "url": "https://BlueAmulet.github.io/UdonSharpOptimizer/index.json",
+    "name": "UdonSharpOptimizer Listing",
+    "id": "blueamulet.udonsharpoptimizer.listing"
+  },
+  {
+    "url": "https://c-colloid.github.io/PBReplacer-VPM/index.json",
+    "name": "PBReplacer",
+    "id": "jp.colloid.pbreplacer"
+  },
+  {
+    "url": "https://CascadianVR.github.io/UnityShapekeySearch/index.json",
+    "name": "Cascadian - Unity Shapekey Search Listing",
+    "id": "com.cascas.unityshapekeysearch.listing"
+  },
+  {
+    "url": "https://ccvrc.github.io/vpm/index.json",
+    "name": "Crazt Package Listing",
+    "id": "moe.crazt.vpm-listing"
+  },
+  {
+    "url": "https://Centauri2442.github.io/VRCMasterFailureCheck/index.json",
+    "name": "CentauriCore - Master Failure Check Listing",
+    "id": "centauricore.masterchecker.listing"
+  },
+  {
+    "url": "https://Centauri2442.github.io/VRCNetworkDebugger/index.json",
+    "name": "CentauriCore - VRC Network Debugger Listing",
+    "id": "centauricore.networkdebugger.listing"
+  },
+  {
+    "url": "https://ch4rindo.github.io/vpm/index.json",
+    "name": "ch4rindo's Listing",
+    "id": "com.github.ch4rindo.vpm"
+  },
+  {
+    "url": "https://chillmix-crypto.github.io/avatarscope-vpm/index.json",
+    "name": "chill",
+    "id": "com.chill.vpm"
+  },
+  {
+    "url": "https://club-maul.github.io/vpm-listing/index.json",
+    "name": "Club Maul",
+    "id": "com.clubmaul.vpm"
+  },
+  {
+    "url": "https://codec-xyz.github.io/photo_frame_manager/index.json",
+    "name": "Photo Frame Manager Listing",
+    "id": "wtf.codec.photo-frame-manager.listing"
+  },
+  {
+    "url": "https://cstria0106.github.io/vpm-repos/index.json",
+    "name": "goorm's Repositories Listing",
+    "id": "dog.miruku.repositories"
+  },
+  {
+    "url": "https://cuebitt.github.io/vpm/index.json",
+    "name": "Cuebitt's VPM Repository",
+    "id": "rip.cuebitt.vpm"
+  },
+  {
+    "url": "https://cyanlaser.github.io/CyanPlayerObjectPool/index.json",
+    "name": "Cyan Player Object Pool",
+    "id": "com.cyan.playerobjectpool.vcc-listing"
+  },
+  {
+    "url": "https://cyanlaser.github.io/CyanTrigger/index.json",
+    "name": "CyanTrigger VCC Listing",
+    "id": "com.cyan.cyantrigger.vcc-listing"
+  },
+  {
+    "url": "https://cympfh.cc/vpm/index.json",
+    "name": "cympfh",
+    "id": "cc.cympfh.vpm"
+  },
+  {
+    "url": "https://d4rkc0d3r.github.io/vpm-repos/main.json",
+    "name": "d4rkpl4y3r",
+    "id": "io.github.d4rkc0d3r"
+  },
+  {
+    "url": "https://deltaneverused.github.io/VRChatPackages/index.json",
+    "name": "Delta's VRChat packages",
+    "id": "deltaneverused.packagelisting"
+  },
+  {
+    "url": "https://dine-png.github.io/Di_Ne_Tool/index.json",
+    "name": "Di Ne Tool",
+    "id": "di_ne_tool"
+  },
+  {
+    "url": "https://dolphiiiin.github.io/vpm-repos/index.json",
+    "name": "com.dolphiiiin.vpm",
+    "id": "com.dolphiiiin.vpm"
+  },
+  {
+    "url": "https://drblackrat.github.io/vpm-listing/index.json",
+    "name": "DrBlackRat's VCC / VPM Listing",
+    "id": "xyz.drblackrat.vpm"
+  },
+  {
+    "url": "https://dubstepdragon.github.io/consent-cards/index.json",
+    "name": "Consent Cards",
+    "id": "dev.dubby.consent-cards"
+  },
+  {
+    "url": "https://eauploader.github.io/EAUploader-for-VRChat/registry.json",
+    "name": "Easy Avatar Uplaoder",
+    "id": "tech.uslog.eauploader.registry"
+  },
+  {
+    "url": "https://emerytheec.github.io/vpm-listing/index.json",
+    "name": "Bender_Dios Packages",
+    "id": "com.bender-dios.vpm"
+  },
+  {
+    "url": "https://enitimeago.github.io/vpm-repos/index.json",
+    "name": "enitimeago",
+    "id": "io.github.enitimeago.vpm-repos"
+  },
+  {
+    "url": "https://esperecyan.github.io/VRMConverterForVRChat/registry.json",
+    "name": "VRM Converter for VRChat Packages",
+    "id": "jp.pokemori.vrm-converter-for-vrchat.registry"
+  },
+  {
+    "url": "https://facs01-01.github.io/FACS-VPM-Listing/index.json",
+    "name": "FACS01 VPM Listing",
+    "id": "com.facs01.facs_vpm_listing"
+  },
+  {
+    "url": "https://fiakaiera.github.io/vpm-listing/index.json",
+    "name": "fiaKaiera's VPM Catalogue",
+    "id": "net.fiakaiera.vpm-listing"
+  },
+  {
+    "url": "https://foxscore.dev/vpm/index.json",
+    "name": "Vulpine Vault",
+    "id": "dev.foxscore"
+  },
+  {
+    "url": "https://fuka-vr.github.io/vpm-repos/index.json",
+    "name": "FUKA VPM Repository",
+    "id": "com.fuka.vpm"
+  },
+  {
+    "url": "https://furality.github.io/vcc-packages/index.json",
+    "name": "Furality Online Xperience - Official Packages",
+    "id": "com.furality.repos.official"
+  },
+  {
+    "url": "https://gabsith.github.io/GabSith-VCC-Listing/index.json",
+    "name": "GabSith's Tools",
+    "id": "com.gabsith.wft"
+  },
+  {
+    "url": "https://gfool6.github.io/vpm-repos/vpm-list.json",
+    "name": "FZTools",
+    "id": "io.github.gfool6.vpm-list"
+  },
+  {
+    "url": "https://GlinTFraulein.github.io/vpm/index.json",
+    "name": "GlinT Fraulein",
+    "id": "info.glintfraulein.vpm"
+  },
+  {
+    "url": "https://GotoFinal.github.io/GotoScriptsVRC/index.json",
+    "name": "GotoFinal Scripts Listing",
+    "id": "dev.gotofinal.listing"
+  },
+  {
+    "url": "https://gummidot.github.io/vpm-listing/index.json",
+    "name": "gummidot's VPM Packages",
+    "id": "com.gummidot.vpm-listing"
+  },
+  {
+    "url": "https://Guribo.github.io/TLP/index.json",
+    "name": "Guribo's VPM Listing",
+    "id": "tlp.vcc-listing"
+  },
+  {
+    "url": "https://hai-vr.github.io/alleyway-listing/index.json",
+    "name": "https://alleyway.hai-vr.dev",
+    "id": "dev.hai-vr.alleyway.alleyway-listing"
+  },
+  {
+    "url": "https://hai-vr.github.io/vpm-listing/index.json",
+    "name": "https://docs.hai-vr.dev",
+    "id": "dev.hai-vr.vpm"
+  },
+  {
+    "url": "https://hellcat-m18.github.io/vpm-repos/index.json",
+    "name": "hellcat-M18",
+    "id": "com.hellcat-m18.vpm"
+  },
+  {
+    "url": "https://hfcRed.github.io/VPM-Listing/index.json",
+    "name": "hfcReds VPM Packages",
+    "id": "com.hfcred.vpm-listing"
+  },
+  {
+    "url": "https://Hhotatea.github.io/AvatarPoseLibrary/index.json",
+    "name": "AvatarPoseLibrary Listing",
+    "id": "com.hhotatea.avatar-pose-library.listing"
+  },
+  {
+    "url": "https://hisacat.github.io/VCCListing/index.json",
+    "name": "HisaCat’s VCC Listing",
+    "id": "cat.hisa.vpm"
+  },
+  {
+    "url": "https://hkrn.github.io/vpm.json",
+    "name": "hkrn VPM registry",
+    "id": "com.github.hkrn"
+  },
+  {
+    "url": "https://hoke946.github.io/Trigger2to3_VPM/index.json",
+    "name": "Trigger2to3 Listing",
+    "id": "com.t-hoke.trigger2to3.listing"
+  },
+  {
+    "url": "https://hotaru86.github.io/VPM/index.json",
+    "name": "ほたるのひかり",
+    "id": "io.github.hotaru86.VPM"
+  },
+  {
+    "url": "https://HugPhiluu.github.io/PhilSort/index.json",
+    "name": "Phil's Sorter Listing",
+    "id": "com.philslab.philsorter.listing"
+  },
+  {
+    "url": "https://illusive-isc.github.io/vpm-repos/index.json",
+    "name": "illusive_isc",
+    "id": "jp.illusive-isc.vpm"
+  },
+  {
+    "url": "https://jazjasmine.github.io/VCC/index.json",
+    "name": "JazJasmine's Dev Center",
+    "id": "com.jazjasmine.dev-center"
+  },
+  {
+    "url": "https://JeTeeS.github.io/TES-VPM-Package-Listing/index.json",
+    "name": "JeTeeS' VPM Packages",
+    "id": "dev.jetees.vpm-listing"
+  },
+  {
+    "url": "https://k3sra.github.io/vrsive-avatar-exporter/index.json",
+    "name": "VRSive Avatar Tools",
+    "id": "com.vrsive.avatar-exporter.listing"
+  },
+  {
+    "url": "https://k4584587.github.io/Modular-Auto-Toggle/index.json",
+    "name": "Modular Auto Toggle Tool Listing",
+    "id": "kr.needon.modular-auto-toggle.listing"
+  },
+  {
+    "url": "https://kakunpc.github.io/kakunpc_vpm/index.json",
+    "name": "かーばんくるのvpm",
+    "id": "com.kakunpc.vpm"
+  },
+  {
+    "url": "https://kb10uy.github.io/vrc-repository/index.json",
+    "name": "kb10uy VRChat Package Repository",
+    "id": "org.kb10uy.vrc-repository"
+  },
+  {
+    "url": "https://kemocade.github.io/Kemocade.Vrc.Data.Extensions/index.json",
+    "name": "Kemocade VRC Data Extensions Listing",
+    "id": "com.kemocade.vrc.data.extensions.listing"
+  },
+  {
+    "url": "https://KitKat4191.github.io/JetSim-VCC-Listing/index.json",
+    "name": "JetSim",
+    "id": "com.kitkat.jetsim"
+  },
+  {
+    "url": "https://kohchaaa.github.io/vpm-repos/vpm.json",
+    "name": "Kohchaaa",
+    "id": "jp.kohchaaa.vpm"
+  },
+  {
+    "url": "https://kurone-kito.github.io/vpm/index.json",
+    "name": "Kuroné Kito (black.kit.*)",
+    "id": "black.kit.vpm-catalog"
+  },
+  {
+    "url": "https://kurotu.github.io/vpm-repos/vpm.json",
+    "name": "kurotu VPM Packages",
+    "id": "com.github.kurotu.vpm"
+  },
+  {
+    "url": "https://kxn4t.github.io/vpm-repos/index.json",
+    "name": "Kanameliser VPM Packages",
+    "id": "net.kanameliser.vpm"
+  },
+  {
+    "url": "https://kyure-a.github.io/vpm-repos/vpm.json",
+    "name": "Kyure_A",
+    "id": "io.github.kyure-a.vpm"
+  },
+  {
+    "url": "https://labthe3rd.github.io/PZCameraSystem/index.json",
+    "name": "Party Zone Camera System",
+    "id": "com.thepartyzonevr.camerasystem"
+  },
+  {
+    "url": "https://LauraRozier.github.io/LauraVRCUtils/index.json",
+    "name": "Laura's VRC Utils",
+    "id": "com.laurarozier.LauraVRCUtils"
+  },
+  {
+    "url": "https://lazyoptimiser.euan.net/index.json",
+    "name": "LazyOptimiser",
+    "id": "net.euan.lazyoptimiser.listing"
+  },
+  {
+    "url": "https://lereldarion.github.io/vpm-listing/index.json",
+    "name": "Lereldarion VPM repository",
+    "id": "lereldarion"
+  },
+  {
+    "url": "https://lighfu.github.io/vpm/index.json",
+    "name": "AjisaiFlow",
+    "id": "com.ajisaiflow.vpm"
+  },
+  {
+    "url": "https://lilxyzw.github.io/vpm-repos-shadercore-modules/vpm.json",
+    "name": "lilxyzw-shadercore-modules",
+    "id": "io.github.lilxyzw.vpm-shadercore-modules"
+  },
+  {
+    "url": "https://lilxyzw.github.io/vpm-repos/vpm.json",
+    "name": "lilxyzw",
+    "id": "io.github.lilxyzw.vpm"
+  },
+  {
+    "url": "https://LiveDimensions.github.io/VRRefAssist/index.json",
+    "name": "VR RefAssist Listing",
+    "id": "com.livedimensions.vrrefassist.listing"
+  },
+  {
+    "url": "https://lyrastellate.github.io/vpm-repos/index.json",
+    "name": "LyraStellate",
+    "id": "dev.lyra.vpm-repos"
+  },
+  {
+    "url": "https://mametsubu8.github.io/vpm-listing/vpm.json",
+    "name": "mametsubu",
+    "id": "com.mame8.vpm"
+  },
+  {
+    "url": "https://marble810.github.io/vpmlist/index.json",
+    "name": "Marble Avatar Toolbox",
+    "id": "com.marble810.vpmlist"
+  },
+  {
+    "url": "https://mattshark89.github.io/OpenFlight-VRC/index.json",
+    "name": "OpenFlight VRC",
+    "id": "com.mattshark.openflight.repo"
+  },
+  {
+    "url": "https://mayoi3.github.io/mayoi-vpm-repo/index.json",
+    "name": "まよい工房 / Mayoi Works",
+    "id": "com.github.mayoi3.mayoi-vpm-repo"
+  },
+  {
+    "url": "https://meatwo310.net/vpm/index.json",
+    "name": "Meatwo310 VPM Repository",
+    "id": "net.meatwo310.vpm"
+  },
+  {
+    "url": "https://meronmks.github.io/vpm/index.json",
+    "name": "meronmksTools",
+    "id": "io.github.meronmks.vpm"
+  },
+  {
+    "url": "https://miner28.github.io/MinerPackages/index.json",
+    "name": "Miner Packages",
+    "id": "com.miner28.minerpackages"
+  },
+  {
+    "url": "https://minminmean.github.io/minminmart/index.json",
+    "name": "MinMinMart Listing",
+    "id": "minminmean.listing"
+  },
+  {
+    "url": "https://mmmaellon.github.io/MMMaellonVCCListing/index.json",
+    "name": "MMMaellon's Prefabs",
+    "id": "com.mmmaellon.vcc-listing"
+  },
+  {
+    "url": "https://moruton1119.github.io/com.morulab.unity-tools/index.json",
+    "name": "Morulab Unity Tools",
+    "id": "https://moruton1119.github.io/com.morulab.unity-tools/index.json"
+  },
+  {
+    "url": "https://naari3.github.io/mesh-dent/vpm.json",
+    "name": "naari3's VPM Repository",
+    "id": "net.naari3.vpm"
+  },
+  {
+    "url": "https://natanetoon.com/index.json",
+    "name": "Natane Toon Shader",
+    "id": "com.natane.toonshader.listing"
+  },
+  {
+    "url": "https://neuru5278.github.io/main-vpm-repos/index.json",
+    "name": "Neuru5278 Main VPM Repo",
+    "id": "com.neuru5278.repos.main"
+  },
+  {
+    "url": "https://nickel-jp.github.io/avatar-recovery-unity/index.json",
+    "name": "Avatar Recovery Unity",
+    "id": "com.nickel-jp.repos.avatar-recovery"
+  },
+  {
+    "url": "https://nidonocu.github.io/virtual-gryphon-packages/index.json",
+    "name": "Virtual Gryphon Packages",
+    "id": "com.nidonocu.virtual-gryphon-packages"
+  },
+  {
+    "url": "https://null-k.github.io/vpm-listing/index.json",
+    "name": "PuddingKC's VPM Packages",
+    "id": "com.puddingkc.vpm-listing"
+  },
+  {
+    "url": "https://nullclone.github.io/vpm-listing/index.json",
+    "name": "NullClone",
+    "id": "com.null.vpm-listing"
+  },
+  {
+    "url": "https://nuruwo8.github.io/nuruwo-vpm-list/index.json",
+    "name": "nuruwo",
+    "id": "com.nuruwo.list"
+  },
+  {
+    "url": "https://nyakomechan.github.io/vpm-repository/index.json",
+    "name": "nyakome",
+    "id": "io.github.nyakomechan.vpm"
+  },
+  {
+    "url": "https://o-tr.github.io/vpm/vpm.json",
+    "name": "ootr",
+    "id": "jp.ootr.vpm"
+  },
+  {
+    "url": "https://omeletteak.github.io/vpm-listing/index.json",
+    "name": "omelette_ak VPM Listing",
+    "id": "dev.omelette_ak.vpm"
+  },
+  {
+    "url": "https://orels1.github.io/orels-Unity-Shaders/index.json",
+    "name": "orels Unity Shaders",
+    "id": "sh.orels.shaders"
+  },
+  {
+    "url": "https://page.853lab.com/vpm-repos/vpm.json",
+    "name": "The 53 Labs vpm",
+    "id": "io.github.sonic853.vpm"
+  },
+  {
+    "url": "https://pandrabox.github.io/vpm/index.json",
+    "name": "pandrabox",
+    "id": "com.github.pandrabox.vpm"
+  },
+  {
+    "url": "https://pasocommate.chigiri.tokyo/index.json",
+    "name": "PasocomMate",
+    "id": "tokyo.chigiri.pasocommate.vpm-listing"
+  },
+  {
+    "url": "https://pesky12.github.io/PeskyBox/index.json",
+    "name": "Pesky's Box",
+    "id": "vpm.pesky.box"
+  },
+  {
+    "url": "https://phi16.github.io/VRC_Packages/index.json",
+    "name": "phi16/Imaginantia VRC Packages",
+    "id": "com.imaginantia.listing"
+  },
+  {
+    "url": "https://pokeyi.dev/vpm-packages/index.json",
+    "name": "Pokeyi's Udon Tools",
+    "id": "dev.pokeyi.vpm-packages"
+  },
+  {
+    "url": "https://prismic247.github.io/ScaledColliderSystem/index.json",
+    "name": "Scaled Collider System",
+    "id": "com.prismic247.scaledcolliders"
+  },
+  {
+    "url": "https://project-vrcz.github.io/vpm-listing/index.json",
+    "name": "project-vrcz listing",
+    "id": "xyz.misakal.vpm.project-vrcz"
+  },
+  {
+    "url": "https://projektcommunity.github.io/avatar-swag-vpm/index.json",
+    "name": "PJKT Avatar Swag",
+    "id": "com.PJKT.AvatarSwag"
+  },
+  {
+    "url": "https://purpzie.com/vpm/index.json",
+    "name": "Purpzie's VCC Packages",
+    "id": "com.purpzie.vpm"
+  },
+  {
+    "url": "https://qsyi.github.io/vpm-repos/index.json",
+    "name": "qsyi-VPM-repos",
+    "id": "jp.qsyi.vpm"
+  },
+  {
+    "url": "https://r-delta-c.github.io/vpm_repository/index.json",
+    "name": "DeltaField",
+    "id": "io.github.deltafield.vpm"
+  },
+  {
+    "url": "https://raii-x.github.io/vpm-listing/index.json",
+    "name": "raii",
+    "id": "com.fracfloor.vpm-listing"
+  },
+  {
+    "url": "https://ramtype0.github.io/VpmRepository/index.json",
+    "name": "Ram.Type-0 VPM Repository",
+    "id": "com.ramtype0.vpm-repository"
+  },
+  {
+    "url": "https://rassi0429.github.io/KokoaVPMRepository/index.json",
+    "name": "kokoa's VPM Package Repository",
+    "id": "dev.kokoa.vpmPackageRepository"
+  },
+  {
+    "url": "https://raw.githubusercontent.com/APOL-StarLight/VRC-Unity-Essentials/main/vcc.json",
+    "name": "VRChat Unity Essentials",
+    "id": "vrchat.apolstar"
+  },
+  {
+    "url": "https://raw.githubusercontent.com/AzuriteLab/azlab_vrc_repos/master/index.json",
+    "name": "azurite",
+    "id": "com.azlab.vpm"
+  },
+  {
+    "url": "https://raw.githubusercontent.com/ksrgtech/vpm-repository/refs/heads/live/index.json",
+    "name": "ksrgtech packages",
+    "id": "io.github.ksrgtech.vrchat.repo"
+  },
+  {
+    "url": "https://raw.githubusercontent.com/Tsukina-7mochi/glitch-shader/main/vpm.json",
+    "name": "Tsukina-7mochi/glitch-shader",
+    "id": "net.ts7m.glitch-shader"
+  },
+  {
+    "url": "https://raw.githubusercontent.com/Tsukina-7mochi/qvpen-safe-delete/main/vpm.json",
+    "name": "QvPen Safe Clear",
+    "id": "net.ts7m.qvpen-safe-clear"
+  },
+  {
+    "url": "https://raw.githubusercontent.com/Yunhyuk-Jeong/iyan-vpm/main/vpm.json",
+    "name": "Studio Iyan",
+    "id": "dev.iyankim.vpm"
+  },
+  {
+    "url": "https://rayleonard-collection-r3c.github.io/vpm-package-listing/index.json",
+    "name": "Rayleonard Collection (R3C) Packages",
+    "id": "io.github.rayleonard-collection-r3c.vpm-package-listing"
+  },
+  {
+    "url": "https://reava.github.io/VPM-Listings/index.json",
+    "name": "Reava's listings",
+    "id": "chirp.reava.listings"
+  },
+  {
+    "url": "https://redsim.github.io/vpmlisting/index.json",
+    "name": "RED_SIM VRChat Assets",
+    "id": "red.sim.vpm"
+  },
+  {
+    "url": "https://remuria.natsuneko.com/repositories/com.natsuneko.vpm.json",
+    "name": "Natsuneko Laboratory VPM",
+    "id": "com.natsuneko.vpm"
+  },
+  {
+    "url": "https://remuria.natsuneko.com/repositories/com.natsuneko.vpm.worlds.json",
+    "name": "Natsuneko Laboratory - Worlds",
+    "id": "com.natsuneko.vpm.worlds"
+  },
+  {
+    "url": "https://repo.buddyworks.wtf/index.json",
+    "name": "BUDDYWORKS VPM Listing",
+    "id": "com.buddyworks.vpm"
+  },
+  {
+    "url": "https://rerigferl.github.io/vpm/vpm.json",
+    "name": "Numeira VPM Repository",
+    "id": "numeira"
+  },
+  {
+    "url": "https://ribeKim.github.io/vpm/index.json",
+    "name": "Package Listing",
+    "id": "io.github.ribekim.vpm"
+  },
+  {
+    "url": "https://rlist.arch-linux.pro/index.json",
+    "name": "Redline List",
+    "id": "dev.redline-team.redlinelist"
+  },
+  {
+    "url": "https://rollphes.github.io/vpm-repos/vpm.json",
+    "name": "rollphes",
+    "id": "io.github.rollphes.vpm"
+  },
+  {
+    "url": "https://rroki-0u0.github.io/vpm-repos/index.json",
+    "name": "rroki-0u0 VPM Packages",
+    "id": "jp.rroki.vpm"
+  },
+  {
+    "url": "https://rurre.github.io/vpm/index.json",
+    "name": "Pumkin's VPM Repo",
+    "id": "io.github.rurre.vpm"
+  },
+  {
+    "url": "https://sack-kazu.github.io/vpm-repository/index.json",
+    "name": "Sack-Gear VPM Packages",
+    "id": "com.sack-gear.vpm"
+  },
+  {
+    "url": "https://sanaehururu1200.github.io/ma-suimin_system/index.json",
+    "name": "RBS SuiminSystem Listing",
+    "id": "studio.raspberry.vrchat.ma-suimin-system.listing"
+  },
+  {
+    "url": "https://saphiblue.github.io/vcc-listing/index.json",
+    "name": "Saphis VPM Packages Listing",
+    "id": "io.github.saphiblue.vcc-listing"
+  },
+  {
+    "url": "https://SaturnianJP.github.io/AutoSaveScript-for-Unity/index.json",
+    "name": "Unity AutoSave Listing",
+    "id": "satania.autosave.listing"
+  },
+  {
+    "url": "https://SaturnianJP.github.io/NailSetupTool/index.json",
+    "name": "NailSetupTool Listing",
+    "id": "satania.tools.nailsetup.listing"
+  },
+  {
+    "url": "https://SaturnianJP.github.io/NewKiseteneExVPM/index.json",
+    "name": "New Kisetene Ex Listing",
+    "id": "com.satania.kiseteneex.listing"
+  },
+  {
+    "url": "https://sayabeans.github.io/vpm/index.json",
+    "name": "Sayamame",
+    "id": "com.github.sayabeans.vpm"
+  },
+  {
+    "url": "https://scarlet-crystal.github.io/VCC-Package-Listing/index.json",
+    "name": "Scarlet-Crystal's VCC Package Listing",
+    "id": "com.vrchat.users.scarlet-crystal.vcclisting"
+  },
+  {
+    "url": "https://sh0ou.github.io/vpm-repos/vpm.json",
+    "name": "sh0u",
+    "id": "io.github.sh0ou.vpm"
+  },
+  {
+    "url": "https://sigmal00.github.io/UzumoreShaderVPM/index.json",
+    "name": "UzumoreShader Listing",
+    "id": "jp.sigmal00.uzumore-shader.listing"
+  },
+  {
+    "url": "https://sinkunvv.github.io/BlendMaestro/index.json",
+    "name": "BlendMaestro Listing",
+    "id": "dev.sworks.blendmaestro.listing"
+  },
+  {
+    "url": "https://sizimityper.github.io/vpm/index.json",
+    "name": "sizimityper_VPM",
+    "id": "com.sizimityper.vpm"
+  },
+  {
+    "url": "https://skeb-inc.github.io/skeb-art-panel/index.json",
+    "name": "SkebArtPanel Listing",
+    "id": "skeb.artpanel.listing"
+  },
+  {
+    "url": "https://SleetCat123.github.io/vpm-packages/index.json",
+    "name": "Mizore Nekoyanagi's VPM Packages",
+    "id": "com.mizore-nekoyanagi.vpm-packages"
+  },
+  {
+    "url": "https://snow1226.github.io/vpm-repos/index.json",
+    "name": "Neigerium VPM Repository",
+    "id": "com.neigerium.vpm-repos"
+  },
+  {
+    "url": "https://sophiebluevr.github.io/vpm/index.json",
+    "name": "SophieBlue's VPM Repository",
+    "id": "io.github.sophiebluevr.vpm"
+  },
+  {
+    "url": "https://spokeek.github.io/vpm-repository/index.json",
+    "name": "Spokeek VPM Packages",
+    "id": "fr.spokeek.vpm-packages"
+  },
+  {
+    "url": "https://suzuryg.github.io/vpm-repos/vpm.json",
+    "name": "suzuryg",
+    "id": "jp.suzuryg.vpm"
+  },
+  {
+    "url": "https://t2penbix99wcoxkv3a4g.github.io/VPM/index.json",
+    "name": "yukiyosanako's VPM Repository",
+    "id": "io.github.ykysnk.vpm"
+  },
+  {
+    "url": "https://taremin.github.io/CopyComponentsByRegex/index.json",
+    "name": "Taremin VPM Packages",
+    "id": "taremin.vpm"
+  },
+  {
+    "url": "https://timiz0r.github.io/EZUtils/index.json",
+    "name": "EZUtils",
+    "id": "com.timiz0r.ezutils"
+  },
+  {
+    "url": "https://tliks.github.io/vpm-repos/index.json",
+    "name": "Ao_425",
+    "id": "com.aoyon.vpm"
+  },
+  {
+    "url": "https://tmyt.github.io/vpm/index.json",
+    "name": "onsen.tech tools",
+    "id": "tech.onsen.vrc"
+  },
+  {
+    "url": "https://ToffelsKater.github.io/fur-grooming-tool/index.json",
+    "name": "Fur Grooming Tool Listing",
+    "id": "com.furgrooming.tool.listing"
+  },
+  {
+    "url": "https://toh-csecb.github.io/package-listing/index.json",
+    "name": "toh",
+    "id": "jp.toh.package-listing"
+  },
+  {
+    "url": "https://tp-jp.github.io/vpm-repos/index.json",
+    "name": "TpLab",
+    "id": "io.github.tp-jp.vpm"
+  },
+  {
+    "url": "https://Tr1turbo.github.io/BlendShare/index.json",
+    "name": "BlendShare Listing",
+    "id": "com.triturbo.blendshare.listing"
+  },
+  {
+    "url": "https://tr1turbo.github.io/vpm-listing/index.json",
+    "name": "Triturbo",
+    "id": "com.triturbo.vpm-listing"
+  },
+  {
+    "url": "https://tsukumodo.github.io/omamori/index.json",
+    "name": "アバター改変おまもり Listing",
+    "id": "com.tsukumodo.avatar-omamori.listing"
+  },
+  {
+    "url": "https://valenvrc.com/index.json",
+    "name": "Valenvrc Listing",
+    "id": "com.valenvrc.package_listing"
+  },
+  {
+    "url": "https://vavassor.github.io/OrchidSealVPM/index.json",
+    "name": "Orchid Seal's VPM repository",
+    "id": "com.orchidseal.vpm"
+  },
+  {
+    "url": "https://vcc.pawlygon.net/index.json",
+    "name": "Pawlygon VCC",
+    "id": "net.pawlygon.vcc-packages"
+  },
+  {
+    "url": "https://vcc.raphii.co/index.json",
+    "name": "Raphii's VPM Packages",
+    "id": "co.raphii.vpm-listing"
+  },
+  {
+    "url": "https://vcc.vrcfury.com",
+    "name": "VRCFury Repo",
+    "id": "com.vrcfury.vcc"
+  },
+  {
+    "url": "https://VixenCreations.github.io/VixenToolBox/index.json",
+    "name": "Vixens Toolbox",
+    "id": "com.vixencreations.vixens-toolbox.listing"
+  },
+  {
+    "url": "https://vpm.32ba.net/index.json",
+    "name": "32ba VPM repository",
+    "id": "net.32ba.vpm"
+  },
+  {
+    "url": "https://vpm.anatawa12.com/vpm.json",
+    "name": "anatawa12",
+    "id": "com.anatawa12.main"
+  },
+  {
+    "url": "https://vpm.azuretek.org/azuretek/vpm.json",
+    "name": "Azuretek (kobi32768)",
+    "id": "org.azuretek.vpm"
+  },
+  {
+    "url": "https://vpm.bluwizard.net/index.json",
+    "name": "BluWizard LABS Repository",
+    "id": "net.bluwizard.vpmlist"
+  },
+  {
+    "url": "https://vpm.chanfoo.net/vpm.json",
+    "name": "nekochanfood",
+    "id": "net.chanfoo.vpm"
+  },
+  {
+    "url": "https://vpm.chocopoi.com/index.json",
+    "name": "chocopoi Listing",
+    "id": "com.chocopoi.vpm-listing"
+  },
+  {
+    "url": "https://vpm.coderco.su/index.json",
+    "name": "CoderCo's VPM Packages",
+    "id": "ru.coderco.vpm-listing"
+  },
+  {
+    "url": "https://vpm.gatosyocora.net/index.json",
+    "name": "gatosyocora",
+    "id": "net.gatosyocora.vpm"
+  },
+  {
+    "url": "https://vpm.gyoku.tech/vpm.json",
+    "name": "gyokute",
+    "id": "tech.gyoku.main"
+  },
+  {
+    "url": "https://vpm.hackebein.dev/index.json",
+    "name": "vpm.hackebein.dev",
+    "id": "vpm.hackebein.dev"
+  },
+  {
+    "url": "https://vpm.hinasense.jp/vpm.json",
+    "name": "vpm.hinasense.jp",
+    "id": "vpm.hinasense.jp"
+  },
+  {
+    "url": "https://vpm.hoshinolabs.com/vpm.json",
+    "name": "Hoshino Labs.",
+    "id": "com.hoshinolabs.vpm"
+  },
+  {
+    "url": "https://vpm.iwa.si/vpm.json",
+    "name": "Iwashi Packages",
+    "id": "si.iwa.packages"
+  },
+  {
+    "url": "https://vpm.k-neco.com/index.json",
+    "name": "THE_cattail VPM",
+    "id": "com.the-cattail.vpm"
+  },
+  {
+    "url": "https://vpm.kaikoga.net/index.json",
+    "name": "vpm.kaikoga.net",
+    "id": "net.kaikoga.vpm"
+  },
+  {
+    "url": "https://vpm.kesera2.dev/index.json",
+    "name": "kesera2",
+    "id": "dev.kesera2.vpm"
+  },
+  {
+    "url": "https://vpm.kiba.red/index.json",
+    "name": "KIBA Lab. VRChat Packages",
+    "id": "com.kibalab.vpm"
+  },
+  {
+    "url": "https://vpm.kittyn.cat/index.json",
+    "name": "cátte — VPM Packages",
+    "id": "cat.kittyn.vpm"
+  },
+  {
+    "url": "https://vpm.koyashiro.net/index.json",
+    "name": "koyashiro's vpm repo",
+    "id": "net.koyashiro.vpm"
+  },
+  {
+    "url": "https://vpm.kwxxw.net/index.json",
+    "name": "Yamadev packages",
+    "id": "net.kwxxw.vpm"
+  },
+  {
+    "url": "https://vpm.limitex.dev/index.json",
+    "name": "Limitex Packages",
+    "id": "dev.limitex"
+  },
+  {
+    "url": "https://vpm.logilabo.dev/avatars.json",
+    "name": "Logilabo Avatar Tools",
+    "id": "dev.logilabo.vpm.avatars"
+  },
+  {
+    "url": "https://vpm.m4rshal.com/vpm.json",
+    "name": "m4rshal",
+    "id": "com.m4rshal.vpm"
+  },
+  {
+    "url": "https://vpm.maaaaa.net/index.json",
+    "name": "Poyo's VPM Repo",
+    "id": "net.maaaaa.vpm"
+  },
+  {
+    "url": "https://vpm.matcha-soft.com/repos.json",
+    "name": "MitarashiDango VPM Repository",
+    "id": "com.matcha-soft.vpm"
+  },
+  {
+    "url": "https://vpm.micksam7.com/index.json",
+    "name": "Micca's VCC Repository",
+    "id": "com.micksam7.vpm"
+  },
+  {
+    "url": "https://vpm.mimylab.com/index.json",
+    "name": "MimyLab",
+    "id": "com.mimylab.vpm"
+  },
+  {
+    "url": "https://vpm.nadena.dev/vpm.json",
+    "name": "bd_",
+    "id": "dev.nadena.vpm"
+  },
+  {
+    "url": "https://vpm.narazaka.net/index.json",
+    "name": "Narazaka VPM Listing",
+    "id": "net.narazaka.vpm"
+  },
+  {
+    "url": "https://vpm.nekobako.net/index.json",
+    "name": "nekobako",
+    "id": "net.nekobako.vpm-listing"
+  },
+  {
+    "url": "https://vpm.nekomimi.studio/index.json",
+    "name": "nekomimiStudio VPM Repo",
+    "id": "studio.nekomimi.vpm"
+  },
+  {
+    "url": "https://vpm.niri.la/vpm.json",
+    "name": "ni rila",
+    "id": "la.niri.vpm"
+  },
+  {
+    "url": "https://vpm.noctlab.com/vpm.json",
+    "name": "AKATSUKIYA-NoctLab",
+    "id": "com.noctlab.vpm"
+  },
+  {
+    "url": "https://vpm.paltee.dev/index.json",
+    "name": "VPM Package Repository",
+    "id": "dev.paltee.vpm"
+  },
+  {
+    "url": "https://vpm.pimaker.at/index.json",
+    "name": "_pi_'s funky fresh VPM repository",
+    "id": "at.pimaker.vpm"
+  },
+  {
+    "url": "https://vpm.pukosrv.net/",
+    "name": "Pukorufu Packages",
+    "id": "net.puk06.vpm"
+  },
+  {
+    "url": "https://vpm.raitichan.net/vpm.json",
+    "name": "Raitichan's General store",
+    "id": "net.raitichan.vpm"
+  },
+  {
+    "url": "https://vpm.razgriz.one/index.json",
+    "name": "Raz's VPM Repo",
+    "id": "one.razgriz.vpm-repo"
+  },
+  {
+    "url": "https://vpm.rerac.dev/index.json",
+    "name": "RC Tools",
+    "id": "dev.rerac.rctoolslisting"
+  },
+  {
+    "url": "https://vpm.rs64.net/vpm.json",
+    "name": "ReinaS-vpm-repos",
+    "id": "net.rs64.vpm"
+  },
+  {
+    "url": "https://vpm.smisann.net/vpm.json",
+    "name": "smisann",
+    "id": "net.smisann.vpm"
+  },
+  {
+    "url": "https://vpm.techanon.dev/index.json",
+    "name": "ArchiTech Assets",
+    "id": "dev.architech.listing"
+  },
+  {
+    "url": "https://vpm.thry.dev/index.json",
+    "name": "Thry's VPM Listing",
+    "id": "dev.thry.vpm"
+  },
+  {
+    "url": "https://vpm.udon.zip/index.json",
+    "name": "Tatamo",
+    "id": "zip.udon.vpm"
+  },
+  {
+    "url": "https://vpm.ureishi.net/repos.json",
+    "name": "ureishi",
+    "id": "net.ureishi.vpm"
+  },
+  {
+    "url": "https://vpm.vrsl.dev/index.json",
+    "name": "VR Stage Lighting VPM Repo",
+    "id": "dev.vrsl.vpm"
+  },
+  {
+    "url": "https://vpm.whyknot.dev/index.json",
+    "name": "WhyKnot Tools",
+    "id": "dev.whyknot.vpm"
+  },
+  {
+    "url": "https://vpm.yozolab.net/index.json",
+    "name": "YozoLab-VPMRepository listing",
+    "id": "net.yozolab.vpmrepository-listing"
+  },
+  {
+    "url": "https://vpm.yukineko.dev/index.json",
+    "name": "yukineko works packages",
+    "id": "dev.yukineko.vpm-repos"
+  },
+  {
+    "url": "https://vrc-staples.github.io/VRCUnityDevTools/index.json",
+    "name": "VRC Unity Dev Tools Listing",
+    "id": "com.staples.vrc-unity-dev-tools.listing"
+  },
+  {
+    "url": "https://vrceve.github.io/vrceve-asset/index.json",
+    "name": "VRChatEventCalender Listing",
+    "id": "vrceve.calendar.listing"
+  },
+  {
+    "url": "https://vrchat-community.github.io/vpm-listing-curated/index.json",
+    "name": "Curated",
+    "id": "com.vrchat.repos.curated"
+  },
+  {
+    "url": "https://vrchat.github.io/packages/index.json",
+    "name": "Official",
+    "id": "com.vrchat.repos.official"
+  },
+  {
+    "url": "https://vrctxl.github.io/VPM/index.json",
+    "name": "TXL Prefab VPM Packages",
+    "id": "com.texelsaur.vpm"
+  },
+  {
+    "url": "https://vrsuya.com/vpm/vpm.json",
+    "name": "VRSuya",
+    "id": "com.vrsuya.vpm"
+  },
+  {
+    "url": "https://wagunasu812.github.io/vpm-listing/index.json",
+    "name": "wagunasu812's VPM Repository",
+    "id": "com.wagunasu812.vpm-listing"
+  },
+  {
+    "url": "https://waya0125.com/vpm",
+    "name": "waya0125 Package List",
+    "id": "com.waya0125"
+  },
+  {
+    "url": "https://whiteflare.github.io/vpm-repos/vpm.json",
+    "name": "whiteflare",
+    "id": "jp.whiteflare.vpm"
+  },
+  {
+    "url": "https://wholesomevr.github.io/SPS-Configurator/index.json",
+    "name": "wholesome© SPS Configurator Listing",
+    "id": "wholesomevr.sps-configurator.listing"
+  },
+  {
+    "url": "https://www.matthewherber.com/Happys-VRC-tools/index.json",
+    "name": "Happyrobot33's VRC Tools",
+    "id": "com.happyrobot33.vrctools"
+  },
+  {
+    "url": "https://www.matthewherber.com/PhysboneConstraints/index.json",
+    "name": "Physbone Constraints",
+    "id": "com.happyrobot33.physboneconstraints.repo"
+  },
+  {
+    "url": "https://www.negura-karasu.net/vpm/",
+    "name": "Yagihata",
+    "id": "vpm"
+  },
+  {
+    "url": "https://xNanochip.github.io/VPM-Package-Listing/index.json",
+    "name": "Nanochip's VPM Packages",
+    "id": "dev.nanochip.vpm-listing"
+  },
+  {
+    "url": "https://xtlcdn.github.io/vpm/index.json",
+    "name": "Explosive Theorem Lab. Metaverse Division",
+    "id": "idv.jlchntoz.xtlcdn-listing"
+  },
+  {
+    "url": "https://yoridrill.github.io/vpm-repos/vpm.json",
+    "name": "yoridrill",
+    "id": "jp.yoridrill.vpm-repos"
+  },
+  {
+    "url": "https://yueby.github.io/vpm-listing/index.json",
+    "name": "Yueby",
+    "id": "com.yueby.vpm"
+  },
+  {
+    "url": "https://z3y.github.io/vpm-package-listing/index.json",
+    "name": "z3y's packages",
+    "id": "io.github.z3y.vpm-package-listing"
+  },
+  {
+    "url": "https://zenithval.github.io/vpm/index.json",
+    "name": "ZenithVal's VPM Repo",
+    "id": "io.github.ZenithVal.vpm"
+  },
+  {
+    "url": "https://zwihanderai.github.io/vpm-repos/index.json",
+    "name": "NyaHo-VPM Repos",
+    "id": "net.mt-sys.vpm"
+  },
+  {
+    "url": "https://magmamcnet.github.io/VPM/index.json",
+    "name": "VPM",
+    "id": "vpm"
+  },
+  {
+    "url": "https://meronmks.github.io/vpm-repos/vpm.json",
+    "name": "meronmksTools",
+    "id": "io.github.meronmks.vpm"
+  },
+  {
+    "url": "https://page.853lab.com/vpm.json",
+    "name": "page.853lab.com",
+    "id": "page.853lab.com"
+  },
+  {
+    "url": "https://poiyomi.github.io/vpm/index.json",
+    "name": "Poiyomi's VPM Repo",
+    "id": "io.github.poiyomi.vpm"
+  },
+  {
+    "url": "https://project-eauploader.github.io/EAUploader-for-VRChat/registry.json",
+    "name": "Registry.json",
+    "id": "registry.json"
+  },
+  {
+    "url": "https://vpm.dreadscripts.com/listings/main.json",
+    "name": "Listings",
+    "id": "listings"
+  },
+  {
+    "url": "https://vpm.nadena.dev/vpm-prerelease.json",
+    "name": "bd_",
+    "id": "dev.nadena.vpm"
+  }
+]

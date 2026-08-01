@@ -8,7 +8,7 @@ export const VRC_GET_CATALOG_URL =
 	"https://raw.githubusercontent.com/vrc-get/vrc-get/master/repositories.txt";
 
 export const VPM_CATALOG_URL =
-	"https://raw.githubusercontent.com/kurotu/vpm-catalog/main/repositories.txt";
+	"https://raw.githubusercontent.com/kurotu/vpm-catalog/master/repositories.txt";
 
 export const VCC_REPO_CATALOG_URL =
 	"https://raw.githubusercontent.com/vcc-repo/vcc-repo.github.io/main/repos.json";
