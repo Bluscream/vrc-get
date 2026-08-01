@@ -6,13 +6,12 @@ import { Check, Plus, Search } from "lucide-react";
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { HNavBar, VStack } from "@/components/layout";
 import { ScrollableCardTable } from "@/components/ScrollableCardTable";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { commands, type TauriRemoteRepositoryInfo } from "@/lib/bindings";
 import { downloadCatalogRepoInfo, fetchCatalogUrls } from "@/lib/catalog";
-import { tc } from "@/lib/i18n";
+import { tc, tt } from "@/lib/i18n";
 import { usePrevPathName } from "@/lib/prev-page";
 import { HeadingPageName } from "../-tab-selector";
 import { addRepository } from "../repositories/-use-add-repository";
@@ -106,8 +105,8 @@ function PageBody() {
 			if (item.info.id.toLowerCase().includes(q)) return true;
 			return item.info.packages.some(
 				(pkg) =>
-					pkg.name.toLowerCase().includes(q) ||
-					pkg.id.toLowerCase().includes(q),
+					pkg?.name?.toLowerCase().includes(q) ||
+					pkg?.display_name?.toLowerCase().includes(q),
 			);
 		});
 	}, [repos, searchQuery]);
@@ -126,7 +125,7 @@ function PageBody() {
 						<Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
 						<Input
 							type="search"
-							placeholder={tc("vpm catalog:search:placeholder")}
+							placeholder={tt("vpm catalog:search:placeholder")}
 							className="pl-8 text-sm"
 							value={searchQuery}
 							onChange={(e) => setSearchQuery(e.target.value)}
@@ -167,13 +166,10 @@ function PageBody() {
 											</div>
 											<div className="flex items-center gap-2 shrink-0">
 												{isAdded ? (
-													<Badge
-														variant="secondary"
-														className="gap-1 px-3 py-1"
-													>
+													<span className="inline-flex items-center gap-1 px-3 py-1 text-xs font-semibold rounded-md bg-secondary text-secondary-foreground">
 														<Check className="h-3.5 w-3.5" />
 														{tc("vpm catalog:status:added")}
-													</Badge>
+													</span>
 												) : (
 													<Button
 														size="sm"
@@ -195,13 +191,12 @@ function PageBody() {
 												</div>
 												<div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto">
 													{item.info.packages.map((pkg) => (
-														<Badge
-															key={pkg.id}
-															variant="outline"
-															className="text-xs py-0.5 px-2"
+														<span
+															key={pkg.name}
+															className="inline-flex items-center text-xs py-0.5 px-2 rounded border border-input bg-background font-normal"
 														>
-															{pkg.name || pkg.id}
-														</Badge>
+															{pkg.display_name || pkg.name}
+														</span>
 													))}
 												</div>
 											</CardContent>
