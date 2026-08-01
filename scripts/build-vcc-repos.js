@@ -8,23 +8,98 @@ const VPM_CATALOG_URL =
 const VCC_REPO_URL =
 	"https://raw.githubusercontent.com/vcc-repo/vcc-repo.github.io/main/repos.json";
 
-function formatUrlToName(url) {
+function formatUrlToName(url, json) {
+	// If json has a valid display name that isn't generic or a filename
+	if (json && json.name && typeof json.name === "string") {
+		const trimmed = json.name.trim();
+		if (
+			trimmed &&
+			!/^vpm$/i.test(trimmed) &&
+			!/\.json$/i.test(trimmed) &&
+			!/^listings?$/i.test(trimmed) &&
+			!/^registry/i.test(trimmed)
+		) {
+			return trimmed;
+		}
+	}
+
 	try {
 		const parsed = new URL(url);
-		const path = parsed.pathname.replace(
-			/\/index\.json|\/vpm\.json|\/repos\.json|\/main\.json|\/$/,
-			"",
-		);
-		if (path.length > 1) {
-			const parts = path.split("/").filter(Boolean);
-			if (parts.length > 0) {
-				const last = parts[parts.length - 1];
-				return last.charAt(0).toUpperCase() + last.slice(1);
+		const hostParts = parsed.hostname.split(".");
+
+		// Check GitHub Pages format (username.github.io/repo-name)
+		if (parsed.hostname.endsWith(".github.io")) {
+			const user = hostParts[0];
+			const pathSegments = parsed.pathname.split("/").filter(Boolean);
+			if (pathSegments.length > 0) {
+				const repo = pathSegments[0].replace(/\.json$/i, "");
+				if (repo && !/^index|vpm|repos|main|registry|listings$/i.test(repo)) {
+					return `${user} - ${repo.replace(/[-_]/g, " ")}`;
+				}
+			}
+			return user;
+		}
+
+		// Check domain & subdomains (e.g. vpm.dreadscripts.com)
+		if (hostParts.length >= 2) {
+			const mainDomain = hostParts[hostParts.length - 2];
+			if (mainDomain && !/^github|gitlab|gitee$/i.test(mainDomain)) {
+				const formattedDomain =
+					mainDomain.charAt(0).toUpperCase() + mainDomain.slice(1);
+				const pathSegments = parsed.pathname
+					.split("/")
+					.filter(Boolean)
+					.map((s) => s.replace(/\.json$/i, ""))
+					.filter(
+						(s) =>
+							!/^index|vpm|repos|main|registry|listings|category$/i.test(s),
+					);
+				if (pathSegments.length > 0) {
+					return `${formattedDomain} - ${pathSegments.map(s => s.charAt(0).toUpperCase() + s.slice(1)).join(" ")}`;
+				}
+				return `${formattedDomain} VPM`;
 			}
 		}
+
 		return parsed.hostname;
 	} catch (_e) {
 		return url;
+	}
+}
+
+function formatUrlToId(url, json) {
+	if (json && json.id && typeof json.id === "string") {
+		const trimmed = json.id.trim();
+		if (
+			trimmed &&
+			!/^vpm$/i.test(trimmed) &&
+			!/\.json$/i.test(trimmed) &&
+			!/^listings?$/i.test(trimmed) &&
+			!/^registry/i.test(trimmed)
+		) {
+			return trimmed;
+		}
+	}
+
+	try {
+		const parsed = new URL(url);
+		const hostParts = parsed.hostname.split(".");
+
+		if (parsed.hostname.endsWith(".github.io")) {
+			const user = hostParts[0];
+			const pathSegments = parsed.pathname.split("/").filter(Boolean);
+			if (pathSegments.length > 0) {
+				const repo = pathSegments[0].replace(/\.json$/i, "");
+				if (repo && !/^index|vpm|repos|main|registry|listings$/i.test(repo)) {
+					return `${user}.${repo.toLowerCase()}`;
+				}
+			}
+			return user.toLowerCase();
+		}
+
+		return parsed.hostname.toLowerCase();
+	} catch (_e) {
+		return url.toLowerCase();
 	}
 }
 
@@ -85,7 +160,6 @@ async function main() {
 	const results = [];
 	const urls = Array.from(urlSet);
 
-	// Process in batches of 10 for performance
 	const batchSize = 10;
 	for (let i = 0; i < urls.length; i += batchSize) {
 		const chunk = urls.slice(i, i + batchSize);
@@ -102,11 +176,18 @@ async function main() {
 				let hash = null;
 				let lastUpdated = existing.last_updated || new Date().toISOString();
 				let packagesData = {};
+				let parsedJson = null;
 
 				try {
 					const controller = new AbortController();
-					const timeoutId = setTimeout(() => controller.abort(), 8000);
-					const res = await fetch(url, { signal: controller.signal });
+					const timeoutId = setTimeout(() => controller.abort(), 10000);
+					const res = await fetch(url, {
+						headers: {
+							"User-Agent": "vrc-get/1.1.9 ALCOM (https://github.com/vrc-get/vrc-get)",
+							"Accept": "application/json, text/plain, */*",
+						},
+						signal: controller.signal,
+					});
 					clearTimeout(timeoutId);
 
 					if (res.ok) {
@@ -118,14 +199,12 @@ async function main() {
 						const text = await res.text();
 						hash = computeSha256(text);
 
-						const json = JSON.parse(text);
-						if (json && typeof json === "object") {
-							name = json.name || name || json.id;
-							id = json.id || id;
-							if (json.author) author = json.author;
+						parsedJson = JSON.parse(text);
+						if (parsedJson && typeof parsedJson === "object") {
+							if (parsedJson.author) author = parsedJson.author;
 
-							if (json.packages && typeof json.packages === "object") {
-								for (const [pkgId, pkgObj] of Object.entries(json.packages)) {
+							if (parsedJson.packages && typeof parsedJson.packages === "object") {
+								for (const [pkgId, pkgObj] of Object.entries(parsedJson.packages)) {
 									if (pkgObj && typeof pkgObj === "object" && pkgObj.versions) {
 										const versions = pkgObj.versions || {};
 										const versionKeys = Object.keys(versions);
@@ -163,13 +242,16 @@ async function main() {
 						}
 					}
 				} catch (e) {
-					// Fallback gracefully on fetch or parse errors
+					// Fallback gracefully
 				}
+
+				name = formatUrlToName(url, parsedJson);
+				id = formatUrlToId(url, parsedJson);
 
 				return {
 					url: url,
-					name: name || formatUrlToName(url),
-					id: id || formatUrlToName(url).toLowerCase(),
+					name: name,
+					id: id,
 					...(author ? { author } : {}),
 					...(nsfw ? { nsfw: true } : {}),
 					hash: hash || null,
@@ -183,9 +265,9 @@ async function main() {
 		results.push(...batchResults);
 	}
 
-	console.log(`Generated ${results.length} enriched repository entries.`);
+	console.log(`Generated ${results.length} cleaned repository entries.`);
 	fs.writeFileSync("vcc-repo-generated.json", JSON.stringify(results, null, 2));
-	console.log("Saved enriched catalog to vcc-repo-generated.json");
+	console.log("Saved cleaned catalog to vcc-repo-generated.json");
 }
 
 main().catch(console.error);
