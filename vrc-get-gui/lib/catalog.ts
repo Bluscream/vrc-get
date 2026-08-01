@@ -1,49 +1,148 @@
-import {
-	commands,
-	type TauriBasePackageInfo,
-	type TauriRemoteRepositoryInfo,
-} from "@/lib/bindings";
-
 export const DEFAULT_CATALOG_URL =
 	"https://raw.githubusercontent.com/vrc-get/vrc-get/master/repositories.txt";
 
 export const VCC_REPO_CATALOG_URL =
 	"https://raw.githubusercontent.com/vcc-repo/vcc-repo.github.io/main/repos.json";
 
-export type CatalogRepositoryItem = {
+export type CatalogRepositoryEntry = {
 	url: string;
-	info?: TauriRemoteRepositoryInfo;
-	error?: string;
-	loading: boolean;
+	name: string;
+	id?: string;
 };
 
-// Fallback list of popular curated community VPM repositories
-export const EMBEDDED_REPOSITORY_URLS: string[] = [
-	"https://vpm.anatawa12.com/vpm.json",
-	"https://vpm.nadena.dev/vpm.json",
-	"https://vcc.vrcfury.com",
-	"https://poiyomi.github.io/vpm/index.json",
-	"https://lilxyzw.github.io/vpm-repos/vpm.json",
-	"https://hai-vr.github.io/vpm-listing/index.json",
-	"https://cyanlaser.github.io/CyanTrigger/index.json",
-	"https://d4rkc0d3r.github.io/vpm-repos/main.json",
-	"https://vrchat-community.github.io/vpm-listing-curated/index.json",
-	"https://azukimochi.github.io/vpm-repos/index.json",
-	"https://vpm.gatosyocora.net/index.json",
-	"https://vpm.iwa.si/vpm.json",
-	"https://vpm.bluwizard.net/index.json",
-	"https://vpm.chocopoi.com/index.json",
-	"https://vpm.thry.dev/index.json",
-	"https://azukitiger.github.io/vrc-prefabs/index.json",
-	"https://bluscream.github.io/unity-editor-scripts/index.json",
-	"https://rerigferl.github.io/vpm/vpm.json",
-	"https://Adjerry91.github.io/VRCFaceTracking-Templates/index.json",
-	"https://lastationvrchat.github.io/Lastation-Package-Listing/index.json",
-	"https://vpm.vrclinking.com/index.json",
+// Fallback list of popular curated community VPM repositories with names
+export const EMBEDDED_REPOSITORIES: CatalogRepositoryEntry[] = [
+	{
+		name: "anatawa12",
+		id: "com.anatawa12.main",
+		url: "https://vpm.anatawa12.com/vpm.json",
+	},
+	{
+		name: "bd_",
+		id: "dev.nadena.vpm",
+		url: "https://vpm.nadena.dev/vpm.json",
+	},
+	{
+		name: "VRCFury Repo",
+		id: "com.vrcfury.vcc",
+		url: "https://vcc.vrcfury.com",
+	},
+	{
+		name: "Poiyomi Shaders",
+		id: "com.poiyomi.vpm",
+		url: "https://poiyomi.github.io/vpm/index.json",
+	},
+	{
+		name: "lilLab",
+		id: "jp.lilxyzw.vpm",
+		url: "https://lilxyzw.github.io/vpm-repos/vpm.json",
+	},
+	{
+		name: "Hai-VR",
+		id: "dev.hai-vr.vpm",
+		url: "https://hai-vr.github.io/vpm-listing/index.json",
+	},
+	{
+		name: "CyanTrigger VCC Listing",
+		id: "com.cyan.cyantrigger.vcc-listing",
+		url: "https://cyanlaser.github.io/CyanTrigger/index.json",
+	},
+	{
+		name: "d4rkpl4y3r",
+		id: "io.github.d4rkc0d3r",
+		url: "https://d4rkc0d3r.github.io/vpm-repos/main.json",
+	},
+	{
+		name: "Curated VPM Listing",
+		id: "com.vrchat.repos.curated",
+		url: "https://vrchat-community.github.io/vpm-listing-curated/index.json",
+	},
+	{
+		name: "Azukimochi",
+		id: "io.github.azukimochi.main",
+		url: "https://azukimochi.github.io/vpm-repos/index.json",
+	},
+	{
+		name: "gatosyocora",
+		id: "net.gatosyocora.vpm",
+		url: "https://vpm.gatosyocora.net/index.json",
+	},
+	{
+		name: "Iwashi Packages",
+		id: "si.iwa.packages",
+		url: "https://vpm.iwa.si/vpm.json",
+	},
+	{
+		name: "BluWizard LABS Repository",
+		id: "net.bluwizard.vpmlist",
+		url: "https://vpm.bluwizard.net/index.json",
+	},
+	{
+		name: "chocopoi Listing",
+		id: "com.chocopoi.vpm-listing",
+		url: "https://vpm.chocopoi.com/index.json",
+	},
+	{
+		name: "Thry",
+		id: "vpm.thry.dev",
+		url: "https://vpm.thry.dev/index.json",
+	},
 ];
 
-export async function fetchCatalogUrls(): Promise<string[]> {
-	const urlSet = new Set<string>();
+function formatUrlToName(url: string): string {
+	try {
+		const parsed = new URL(url);
+		const path = parsed.pathname.replace(
+			/\/index\.json|\/vpm\.json|\/repos\.json|\/main\.json|\/$/,
+			"",
+		);
+		if (path.length > 1) {
+			const parts = path.split("/").filter(Boolean);
+			if (parts.length > 0) {
+				const last = parts[parts.length - 1];
+				return last.charAt(0).toUpperCase() + last.slice(1);
+			}
+		}
+		return parsed.hostname;
+	} catch (_e) {
+		return url;
+	}
+}
+
+export async function fetchCatalogEntries(): Promise<CatalogRepositoryEntry[]> {
+	const map = new Map<string, CatalogRepositoryEntry>();
+
+	// Seed with default embedded list
+	EMBEDDED_REPOSITORIES.forEach((entry) => {
+		map.set(entry.url.toLowerCase(), entry);
+	});
+
+	// Fetch vcc-repo feed (which includes pre-indexed names, ids, and urls)
+	try {
+		const res = await fetch(VCC_REPO_CATALOG_URL);
+		if (res.ok) {
+			const data = (await res.json()) as Array<{
+				url?: string;
+				name?: string;
+				id?: string;
+			}>;
+			if (Array.isArray(data)) {
+				data.forEach((item) => {
+					if (item?.url) {
+						const normUrl = item.url.trim().toLowerCase();
+						const existing = map.get(normUrl);
+						map.set(normUrl, {
+							url: item.url.trim(),
+							name: item.name || existing?.name || formatUrlToName(item.url),
+							id: item.id || existing?.id,
+						});
+					}
+				});
+			}
+		}
+	} catch (e) {
+		console.warn("Failed to fetch vcc-repo catalog feed:", e);
+	}
 
 	// Fetch primary repositories.txt feed
 	try {
@@ -55,127 +154,18 @@ export async function fetchCatalogUrls(): Promise<string[]> {
 				.map((line) => line.trim())
 				.filter((line) => line.length > 0 && !line.startsWith("#"))
 				.forEach((u) => {
-					urlSet.add(u);
+					const normUrl = u.toLowerCase();
+					if (!map.has(normUrl)) {
+						map.set(normUrl, {
+							url: u,
+							name: formatUrlToName(u),
+						});
+					}
 				});
 		}
 	} catch (e) {
 		console.warn("Failed to fetch primary repositories.txt feed:", e);
 	}
 
-	// Fetch vcc-repo feed
-	try {
-		const res = await fetch(VCC_REPO_CATALOG_URL);
-		if (res.ok) {
-			const data = (await res.json()) as Array<{ url: string }>;
-			if (Array.isArray(data)) {
-				data.forEach((item) => {
-					if (item?.url) {
-						urlSet.add(item.url.trim());
-					}
-				});
-			}
-		}
-	} catch (e) {
-		console.warn("Failed to fetch vcc-repo catalog feed:", e);
-	}
-
-	if (urlSet.size === 0) {
-		return EMBEDDED_REPOSITORY_URLS;
-	}
-
-	return Array.from(urlSet);
-}
-
-export async function downloadCatalogRepoInfo(
-	url: string,
-): Promise<TauriRemoteRepositoryInfo | null> {
-	// Attempt direct HTTP fetch first (works for all repos, including already added ones)
-	try {
-		const res = await fetch(url);
-		if (res.ok) {
-			const json = (await res.json()) as Record<string, unknown>;
-			if (json && typeof json === "object") {
-				const displayName = (json.name as string) || (json.id as string) || url;
-				const id = (json.id as string) || url;
-				const packages: TauriBasePackageInfo[] = [];
-
-				if (json.packages && typeof json.packages === "object") {
-					for (const [pkgId, pkgData] of Object.entries(
-						json.packages as Record<string, unknown>,
-					)) {
-						if (
-							pkgData &&
-							typeof pkgData === "object" &&
-							"versions" in pkgData &&
-							pkgData.versions &&
-							typeof pkgData.versions === "object"
-						) {
-							const versionMap = pkgData.versions as Record<
-								string,
-								Record<string, unknown>
-							>;
-							const versionKeys = Object.keys(versionMap);
-							if (versionKeys.length > 0) {
-								const verData = versionMap[versionKeys[0]];
-								if (verData) {
-									packages.push({
-										name: (verData.name as string) || pkgId,
-										display_name:
-											(verData.displayName as string) ||
-											(verData.name as string) ||
-											pkgId,
-										description: (verData.description as string) || null,
-										keywords: Array.isArray(verData.keywords)
-											? (verData.keywords as string[])
-											: [],
-										version: {
-											major: 0,
-											minor: 0,
-											patch: 0,
-											pre: "",
-											build: "",
-										},
-										unity: null,
-										changelog_url: null,
-										documentation_url: null,
-										vpm_dependencies: [],
-										legacy_packages: [],
-										is_yanked: false,
-									});
-								}
-							}
-						}
-					}
-				}
-
-				return {
-					display_name: displayName,
-					id: id,
-					url: url,
-					packages: packages,
-				};
-			}
-		}
-	} catch (_e) {
-		// Ignore CORS or fetch errors, fall through to Tauri command
-	}
-
-	// Fallback to Tauri command
-	try {
-		const res = await commands.environmentDownloadRepository(url, {});
-		if (res.type === "Success") {
-			return res.value;
-		}
-		if (res.type === "Duplicated") {
-			return {
-				display_name: res.duplicated_name || url,
-				id: url,
-				url: url,
-				packages: [],
-			};
-		}
-	} catch (e) {
-		console.error(`Failed to download repository info for ${url}:`, e);
-	}
-	return null;
+	return Array.from(map.values());
 }

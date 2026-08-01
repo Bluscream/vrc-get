@@ -7,10 +7,13 @@ import { Suspense, useEffect, useMemo, useState } from "react";
 import { HNavBar, VStack } from "@/components/layout";
 import { ScrollableCardTable } from "@/components/ScrollableCardTable";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { commands, type TauriRemoteRepositoryInfo } from "@/lib/bindings";
-import { downloadCatalogRepoInfo, fetchCatalogUrls } from "@/lib/catalog";
+import { commands } from "@/lib/bindings";
+import {
+	type CatalogRepositoryEntry,
+	fetchCatalogEntries,
+} from "@/lib/catalog";
 import { tc, tt } from "@/lib/i18n";
 import { usePrevPathName } from "@/lib/prev-page";
 import { HeadingPageName } from "../-tab-selector";
@@ -33,12 +36,6 @@ function Page() {
 	);
 }
 
-type CatalogRepoState = {
-	url: string;
-	info?: TauriRemoteRepositoryInfo | null;
-	loading: boolean;
-};
-
 function PageBody() {
 	const userReposQuery = useQuery(environmentRepositoriesInfo);
 	const userRepoUrls = useMemo(() => {
@@ -51,43 +48,17 @@ function PageBody() {
 		return set;
 	}, [userReposQuery.data]);
 
-	const [repos, setRepos] = useState<CatalogRepoState[]>([]);
+	const [entries, setEntries] = useState<CatalogRepositoryEntry[]>([]);
 	const [searchQuery, setSearchQuery] = useState("");
-	const [isLoadingUrls, setIsLoadingUrls] = useState(true);
+	const [isLoading, setIsLoading] = useState(true);
 
 	useEffect(() => {
 		let isMounted = true;
-		setIsLoadingUrls(true);
-		fetchCatalogUrls().then((urls) => {
+		setIsLoading(true);
+		fetchCatalogEntries().then((data) => {
 			if (!isMounted) return;
-			setRepos(urls.map((url) => ({ url, loading: true })));
-			setIsLoadingUrls(false);
-
-			// Download repository metadata in batches of 5
-			const batchSize = 5;
-			async function loadBatches() {
-				for (let i = 0; i < urls.length; i += batchSize) {
-					if (!isMounted) break;
-					const chunk = urls.slice(i, i + batchSize);
-					const results = await Promise.all(
-						chunk.map(async (url) => {
-							const info = await downloadCatalogRepoInfo(url);
-							return { url, info };
-						}),
-					);
-					if (!isMounted) break;
-					setRepos((prev) =>
-						prev.map((item) => {
-							const found = results.find((r) => r.url === item.url);
-							if (found) {
-								return { ...item, info: found.info, loading: false };
-							}
-							return item;
-						}),
-					);
-				}
-			}
-			loadBatches();
+			setEntries(data);
+			setIsLoading(false);
 		});
 
 		return () => {
@@ -95,21 +66,16 @@ function PageBody() {
 		};
 	}, []);
 
-	const filteredRepos = useMemo(() => {
-		if (!searchQuery.trim()) return repos;
+	const filteredEntries = useMemo(() => {
+		if (!searchQuery.trim()) return entries;
 		const q = searchQuery.toLowerCase().trim();
-		return repos.filter((item) => {
-			if (item.url.toLowerCase().includes(q)) return true;
-			if (!item.info) return false;
-			if (item.info.display_name.toLowerCase().includes(q)) return true;
-			if (item.info.id.toLowerCase().includes(q)) return true;
-			return item.info.packages.some(
-				(pkg) =>
-					pkg?.name?.toLowerCase().includes(q) ||
-					pkg?.display_name?.toLowerCase().includes(q),
-			);
+		return entries.filter((item) => {
+			if (item.name?.toLowerCase().includes(q)) return true;
+			if (item.url?.toLowerCase().includes(q)) return true;
+			if (item.id?.toLowerCase().includes(q)) return true;
+			return false;
 		});
-	}, [repos, searchQuery]);
+	}, [entries, searchQuery]);
 
 	const bodyAnimation = usePrevPathName().startsWith("/packages")
 		? "slide-left"
@@ -136,29 +102,29 @@ function PageBody() {
 			<main
 				className={`shrink overflow-hidden flex flex-col w-full h-full p-4 gap-4 ${bodyAnimation}`}
 			>
-				{isLoadingUrls && (
+				{isLoading && (
 					<div className="text-center py-8 text-muted-foreground">
 						{tc("vpm catalog:loading catalog...")}
 					</div>
 				)}
 
-				{!isLoadingUrls && filteredRepos.length === 0 && (
+				{!isLoading && filteredEntries.length === 0 && (
 					<div className="text-center py-8 text-muted-foreground">
 						{tc("vpm catalog:no repositories found")}
 					</div>
 				)}
 
-				{!isLoadingUrls && filteredRepos.length > 0 && (
+				{!isLoading && filteredEntries.length > 0 && (
 					<ScrollableCardTable className="h-full w-full">
 						<div className="flex flex-col gap-3 pb-4">
-							{filteredRepos.map((item) => {
+							{filteredEntries.map((item) => {
 								const isAdded = userRepoUrls.has(item.url.toLowerCase());
 								return (
 									<Card key={item.url} className="w-full">
 										<CardHeader className="py-3 px-4 flex flex-row items-center justify-between space-y-0">
 											<div className="flex flex-col gap-1 min-w-0 pr-4">
 												<CardTitle className="text-base font-semibold truncate">
-													{item.info ? item.info.display_name : item.url}
+													{item.name}
 												</CardTitle>
 												<span className="text-xs text-muted-foreground truncate">
 													{item.url}
@@ -182,25 +148,6 @@ function PageBody() {
 												)}
 											</div>
 										</CardHeader>
-										{item.info && item.info.packages.length > 0 && (
-											<CardContent className="py-2 px-4 border-t bg-muted/20">
-												<div className="text-xs font-medium text-muted-foreground mb-1.5">
-													{tc("vpm catalog:packages count", {
-														count: item.info.packages.length,
-													})}
-												</div>
-												<div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto">
-													{item.info.packages.map((pkg) => (
-														<span
-															key={pkg.name}
-															className="inline-flex items-center text-xs py-0.5 px-2 rounded border border-input bg-background font-normal"
-														>
-															{pkg.display_name || pkg.name}
-														</span>
-													))}
-												</div>
-											</CardContent>
-										)}
 									</Card>
 								);
 							})}
