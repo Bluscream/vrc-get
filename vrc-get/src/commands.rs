@@ -371,6 +371,8 @@ impl<T, E> ResultExt<T, E> for Result<T, E> {
     }
 }
 
+mod backup;
+mod catalog;
 mod info;
 mod migrate;
 #[cfg(feature = "experimental-vcc")]
@@ -393,6 +395,9 @@ pub enum Command {
     Search(Search),
     #[command(subcommand)]
     Repo(Repo),
+    #[command(subcommand)]
+    Backup(backup::Backup),
+    Catalog(catalog::Catalog),
     #[command(subcommand)]
     UserPackage(UserPackage),
     #[command(subcommand)]
@@ -422,6 +427,8 @@ multi_command!(Command is
     Downgrade,
     Search,
     Repo,
+    Backup,
+    Catalog,
     UserPackage,
     Info,
     Migrate,

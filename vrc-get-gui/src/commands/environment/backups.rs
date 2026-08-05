@@ -3,7 +3,7 @@ use crate::commands::prelude::*;
 use crate::commands::project::TauriPendingProjectChanges;
 use crate::utils::{default_project_path, project_backup_path};
 use specta::Type;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use tauri::{AppHandle, State, Window};
 use tokio_util::compat::TokioAsyncReadCompatExt;
 use vrc_get_vpm::io::DefaultEnvironmentIo;
@@ -49,6 +49,18 @@ pub struct TauriRestoreResult {
 	pub should_resolve: bool,
 	pub pending_changes: Option<TauriPendingProjectChanges>,
 	pub missing_dependencies: Vec<String>,
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn environment_read_backup_metadata(
+	backup_path: String,
+) -> Result<Option<vrc_get_vpm::backup::AlcomBackupMetadata>, RustError> {
+	let path = PathBuf::from(backup_path);
+	let metadata = vrc_get_vpm::backup::read_backup_metadata(&path)
+		.await
+		.map_err(|e| RustError::unrecoverable_str(format!("Failed to read metadata: {e}")))?;
+	Ok(metadata)
 }
 
 #[tauri::command]

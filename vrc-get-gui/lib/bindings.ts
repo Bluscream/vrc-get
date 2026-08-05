@@ -65,6 +65,7 @@ export const commands = {
 	environmentListBackups: () => __TAURI_INVOKE<TauriBackupInfo[]>("environment_list_backups"),
 	environmentRestoreBackup: (channel: string, zipPath: string, customName: string | null) => __TAURI_INVOKE<AsyncCallResult<TauriRestoreBackupProgress, TauriRestoreResult>>("environment_restore_backup", { channel, zipPath, customName }),
 	environmentDeleteBackup: (backupPath: string) => __TAURI_INVOKE<null>("environment_delete_backup", { backupPath }),
+	environmentReadBackupMetadata: (backupPath: string) => __TAURI_INVOKE<AlcomBackupMetadata | null>("environment_read_backup_metadata", { backupPath }),
 	environmentSetShowPrereleasePackages: (value: boolean) => __TAURI_INVOKE<null>("environment_set_show_prerelease_packages", { value }),
 	environmentSetBackupFormat: (backupFormat: string) => __TAURI_INVOKE<null>("environment_set_backup_format", { backupFormat }),
 	environmentSetExcludeVpmPackagesFromBackup: (excludeVpmPackagesFromBackup: boolean) => __TAURI_INVOKE<null>("environment_set_exclude_vpm_packages_from_backup", { excludeVpmPackagesFromBackup }),
@@ -221,6 +222,36 @@ export type TauriAlcomTemplate = {
 	unity_version: string | null,
 	vpm_dependencies: { [key in string]: string },
 	unity_packages: string[],
+};
+
+export type AlcomSystemInfo = {
+	os: string,
+	arch: string,
+};
+
+export type AlcomBackupSettings = {
+	backup_format: string,
+	exclude_vpm_packages_from_backup: boolean,
+};
+
+export type AlcomPackageInfo = {
+	name: string,
+	version: string,
+};
+
+export type AlcomBackupMetadata = {
+	version: number,
+	created_at: number,
+	created_at_iso: string,
+	alcom_version: string,
+	project_name: string,
+	project_path: string,
+	backup_path: string,
+	unity_version: string | null,
+	vpm_dependencies: { [key in string]: string },
+	installed_packages: AlcomPackageInfo[],
+	system_info: AlcomSystemInfo,
+	settings: AlcomBackupSettings,
 };
 
 export type TauriBackupInfo = {

@@ -10,6 +10,7 @@ import {
 	Copy,
 	Folder,
 	HardDrive,
+	Info,
 	PackageCheck,
 	RefreshCw,
 	Trash2,
@@ -41,6 +42,7 @@ import {
 } from "@/components/ui/tooltip";
 import {
 	commands,
+	type AlcomBackupMetadata,
 	type TauriBackupInfo,
 	type TauriRestoreBackupProgress,
 	type TauriRestoreResult,
@@ -75,6 +77,9 @@ function BackupsPage() {
 	const [backupToDelete, setBackupToDelete] = useState<TauriBackupInfo | null>(
 		null,
 	);
+	const [backupMetadata, setBackupMetadata] =
+		useState<AlcomBackupMetadata | null>(null);
+	const [isLoadingMetadata, setIsLoadingMetadata] = useState(false);
 	const [isDeleting, setIsDeleting] = useState(false);
 	const [customFolderName, setCustomFolderName] = useState("");
 	const [restoreResult, setRestoreResult] =
@@ -111,6 +116,23 @@ function BackupsPage() {
 		setCustomFolderName(defaultStem);
 		setRestoreProgress(null);
 		setIsRestoring(false);
+		setBackupMetadata(null);
+		setIsLoadingMetadata(true);
+
+		commands
+			.environmentReadBackupMetadata(backup.path)
+			.then((meta) => {
+				setBackupMetadata(meta);
+				if (meta?.project_name) {
+					setCustomFolderName(meta.project_name);
+				}
+			})
+			.catch((err) => {
+				console.warn("Failed to read backup metadata:", err);
+			})
+			.finally(() => {
+				setIsLoadingMetadata(false);
+			});
 	};
 
 	const handleOpenBackupDir = async (backup: TauriBackupInfo) => {
@@ -206,8 +228,6 @@ function BackupsPage() {
 		toastSuccess("Missing package dependencies copied to clipboard!");
 	};
 
-	const backupPath =
-		settingsQuery.data?.project_backup_path || "Default Backup Location";
 	const defaultProjectPath =
 		settingsQuery.data?.default_project_path || "Default Project Location";
 
@@ -393,7 +413,7 @@ function BackupsPage() {
 				open={selectedBackup !== null}
 				onOpenChange={(open) => !open && setSelectedBackup(null)}
 			>
-				<DialogContent className="max-w-md">
+				<DialogContent className="max-w-lg">
 					<DialogHeader>
 						<DialogTitle className="flex items-center gap-2">
 							<ArchiveRestore className="h-5 w-5 text-primary" />
@@ -401,12 +421,93 @@ function BackupsPage() {
 						</DialogTitle>
 					</DialogHeader>
 
-					<div className="flex flex-col gap-3 py-2 text-sm">
+					<div className="flex flex-col gap-3 py-2 text-sm max-h-[70vh] overflow-y-auto">
 						<p>
 							You are about to restore{" "}
 							<strong className="font-mono">{selectedBackup?.file_name}</strong>{" "}
 							into your Default Project Path.
 						</p>
+
+						{/* Backup Metadata Info Card */}
+						{isLoadingMetadata ? (
+							<div className="p-3 border rounded-md text-xs text-muted-foreground animate-pulse">
+								Loading archive metadata...
+							</div>
+						) : backupMetadata ? (
+							<div className="flex flex-col gap-2 p-3 rounded-md bg-card border text-xs shadow-xs">
+								<div className="flex items-center justify-between border-b pb-2">
+									<span className="font-semibold text-foreground flex items-center gap-1.5">
+										<Info className="h-4 w-4 text-primary" />
+										Archive Metadata
+									</span>
+									<span className="text-muted-foreground font-mono text-[11px]">
+										ALCOM v{backupMetadata.alcom_version} (
+										{backupMetadata.system_info.os})
+									</span>
+								</div>
+								<div className="grid grid-cols-2 gap-2 font-mono text-[11px] pt-1">
+									<div>
+										<span className="text-muted-foreground block text-[10px] font-sans font-semibold">
+											Original Project
+										</span>
+										<span
+											className="font-semibold text-foreground truncate block"
+											title={backupMetadata.project_name}
+										>
+											{backupMetadata.project_name}
+										</span>
+									</div>
+									<div>
+										<span className="text-muted-foreground block text-[10px] font-sans font-semibold">
+											Unity Version
+										</span>
+										<span className="font-semibold text-foreground block">
+											{backupMetadata.unity_version || "Unknown"}
+										</span>
+									</div>
+									<div className="col-span-2">
+										<span className="text-muted-foreground block text-[10px] font-sans font-semibold">
+											Original Path
+										</span>
+										<span
+											className="truncate block text-muted-foreground"
+											title={backupMetadata.project_path}
+										>
+											{backupMetadata.project_path}
+										</span>
+									</div>
+								</div>
+
+								{Object.keys(backupMetadata.vpm_dependencies || {}).length >
+									0 && (
+									<div className="pt-2 border-t mt-1">
+										<div className="flex items-center justify-between mb-1.5">
+											<span className="font-semibold text-[11px] text-foreground">
+												VPM Package Dependencies
+											</span>
+											{backupMetadata.settings
+												.exclude_vpm_packages_from_backup && (
+												<span className="text-[10px] text-amber-500 font-sans font-semibold">
+													Excluded from backup ZIP
+												</span>
+											)}
+										</div>
+										<div className="flex flex-wrap gap-1 max-h-24 overflow-y-auto">
+											{Object.entries(backupMetadata.vpm_dependencies).map(
+												([pkg, ver]) => (
+													<span
+														key={pkg}
+														className="inline-flex items-center px-1.5 py-0.5 rounded bg-muted font-mono text-[10px]"
+													>
+														{pkg} @ {ver}
+													</span>
+												),
+											)}
+										</div>
+									</div>
+								)}
+							</div>
+						) : null}
 
 						<div className="flex flex-col gap-1.5">
 							<label

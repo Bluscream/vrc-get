@@ -642,6 +642,62 @@ async fn create_backup_zip(
 ) -> Result<(), RustError> {
     info!("Collecting files to backup {}...", project_path.display());
 
+    // Generate alcom.backup.json metadata in project directory
+    let metadata_path = project_path.join("alcom.backup.json");
+    {
+        let project_io = vrc_get_vpm::io::DefaultProjectIo::new(project_path.to_path_buf().into_boxed_path());
+        let mut unity_version = None;
+        let mut vpm_deps = std::collections::BTreeMap::new();
+        let mut installed_pkgs = Vec::new();
+
+        if let Ok(unity_project) = vrc_get_vpm::UnityProject::load(project_io).await {
+            unity_version = Some(unity_project.unity_version().to_string());
+            for pkg in unity_project.locked_packages() {
+                vpm_deps.insert(pkg.name().to_string(), pkg.version().to_string());
+            }
+            for (name, pkg) in unity_project.installed_packages() {
+                installed_pkgs.push(vrc_get_vpm::backup::AlcomPackageInfo {
+                    name: name.to_string(),
+                    version: pkg.version().to_string(),
+                });
+            }
+        }
+
+        let now = chrono::Utc::now();
+        let project_name = project_path
+            .file_name()
+            .map(|n| n.to_string_lossy().to_string())
+            .unwrap_or_default();
+
+        let metadata = vrc_get_vpm::backup::AlcomBackupMetadata {
+            version: 1,
+            created_at: now.timestamp() as u64,
+            created_at_iso: now.to_rfc3339(),
+            alcom_version: env!("CARGO_PKG_VERSION").to_string(),
+            project_name,
+            project_path: project_path.to_string_lossy().to_string(),
+            backup_path: backup_path.to_string_lossy().to_string(),
+            unity_version,
+            vpm_dependencies: vpm_deps,
+            installed_packages: installed_pkgs,
+            system_info: vrc_get_vpm::backup::AlcomSystemInfo {
+                os: std::env::consts::OS.to_string(),
+                arch: std::env::consts::ARCH.to_string(),
+            },
+            settings: vrc_get_vpm::backup::AlcomBackupSettings {
+                backup_format: match compression {
+                    Compression::Stored => "zip-store".to_string(),
+                    _ => "zip".to_string(),
+                },
+                exclude_vpm_packages_from_backup: exclude_vpm,
+            },
+        };
+
+        if let Ok(json_str) = serde_json::to_string_pretty(&metadata) {
+            let _ = tokio::fs::write(&metadata_path, json_str).await;
+        }
+    }
+
     let start = std::time::Instant::now();
     let file_tree =
         collect_notable_project_files_tree(PathBuf::from(project_path), exclude_vpm, true).await?;
@@ -653,14 +709,19 @@ async fn create_backup_zip(
         start.elapsed().as_secs_f64()
     );
 
-    parallel_compress_zip(
+    let result = parallel_compress_zip(
         file_tree,
         backup_path.to_path_buf(),
         compression,
         deflate_option,
         ctx,
     )
-    .await?;
+    .await;
+
+    // Clean up temporary alcom.backup.json from project directory
+    let _ = tokio::fs::remove_file(&metadata_path).await;
+
+    result?;
 
     info!(
         "Creating backup archive for {} finished!",

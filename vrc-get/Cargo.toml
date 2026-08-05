@@ -28,6 +28,7 @@ reqwest = { version = "0.13", features = ["charset", "http2", "system-proxy"], d
 serde = { version = "1", features = ["derive", "rc"] }
 serde_json = { version = "1", features = ["preserve_order"] }
 tokio = { version = "1", features = ["rt-multi-thread", "macros", "fs"] }
+tokio-util = "0.7"
 
 [dependencies.vrc-get-vpm]
 version = "0.0.17-beta.0"

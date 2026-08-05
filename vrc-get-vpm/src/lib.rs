@@ -12,6 +12,7 @@ use serde_repr::{Deserialize_repr, Serialize_repr};
 
 use version::{ReleaseType, UnityVersion, Version, VersionRange};
 
+pub mod backup;
 pub mod environment;
 pub mod io;
 mod package_manifest;
