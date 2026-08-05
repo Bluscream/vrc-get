@@ -2,20 +2,20 @@
 
 import { queryOptions, useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { Check, Plus, Search } from "lucide-react";
+import { Check, Plus } from "lucide-react";
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { HNavBar, VStack } from "@/components/layout";
 import { ScrollableCardTable } from "@/components/ScrollableCardTable";
+import { SearchBox } from "@/components/SearchBox";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { commands, type TauriRemoteRepositoryInfo } from "@/lib/bindings";
 import {
 	type CatalogRepositoryEntry,
 	downloadCatalogRepoInfo,
 	fetchCatalogEntries,
 } from "@/lib/catalog";
-import { tc, tt } from "@/lib/i18n";
+import { tc } from "@/lib/i18n";
 import { usePrevPathName } from "@/lib/prev-page";
 import { HeadingPageName } from "../-tab-selector";
 import { addRepository } from "../repositories/-use-add-repository";
@@ -135,16 +135,11 @@ function PageBody() {
 				className="shrink-0"
 				leading={<HeadingPageName pageType={"/packages/catalog"} />}
 				trailing={
-					<div className="relative w-64 compact:h-10 flex items-center">
-						<Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-						<Input
-							type="search"
-							placeholder={tt("vpm catalog:search:placeholder")}
-							className="pl-8 text-sm"
-							value={searchQuery}
-							onChange={(e) => setSearchQuery(e.target.value)}
-						/>
-					</div>
+					<SearchBox
+						className="w-64"
+						value={searchQuery}
+						onChange={(e) => setSearchQuery(e.target.value)}
+					/>
 				}
 			/>
 			<main
