@@ -23,6 +23,9 @@ export function BackupProjectDialog({
 		proceed: 0,
 		total: 1,
 		last_proceed: "",
+		written_bytes: 0,
+		total_bytes: 0,
+		bytes_per_sec: 0,
 	});
 
 	const cancelRef = useRef<() => void>(undefined);
@@ -61,6 +64,9 @@ export function BackupProjectDialog({
 		start(projectPath, dialog);
 	}, [projectPath, dialog]);
 
+	const isFinalizing =
+		progress.proceed >= progress.total && (progress.total_bytes ?? 0) > 0;
+
 	return (
 		<div className={"contents whitespace-normal"}>
 			<DialogTitle>{header ?? tc("projects:dialog:backup header")}</DialogTitle>
@@ -72,10 +78,13 @@ export function BackupProjectDialog({
 						total: progress.total,
 					})}
 				</p>
-				<p className={"overflow-hidden w-full whitespace-pre"}>
+				<p className={"overflow-hidden w-full whitespace-pre font-mono text-xs text-muted-foreground my-1"}>
 					{progress.last_proceed || "Collecting files..."}
 				</p>
-				<Progress value={progress.proceed} max={progress.total} />
+				<Progress
+					value={isFinalizing ? progress.written_bytes : progress.proceed}
+					max={isFinalizing ? progress.total_bytes : progress.total}
+				/>
 			</div>
 			<DialogFooter>
 				<Button className="mr-1" onClick={() => cancelRef.current?.()}>
