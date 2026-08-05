@@ -325,7 +325,7 @@ function BackupsPage() {
 													onClick={() => void handleOpenBackupDir(backup)}
 												>
 													<Folder className="h-4 w-4 mr-2" />
-													Open Backup Directory
+													Open Backup
 												</DropdownMenuItem>
 												<DropdownMenuItem
 													className="text-destructive focus:text-destructive"
