@@ -115,7 +115,7 @@ function BackupsPage() {
 
 	const handleOpenBackupDir = async (backup: TauriBackupInfo) => {
 		try {
-			await commands.utilOpen(backup.path, "open-folder");
+			await commands.utilOpen(backup.path, "OpenParentIfNotExists");
 		} catch (err) {
 			toastError(`Failed to open backup folder: ${String(err)}`);
 		}
