@@ -6,13 +6,16 @@ import {
 	AlertCircle,
 	ArchiveRestore,
 	CheckCircle2,
+	ChevronDown,
 	Copy,
 	Folder,
 	HardDrive,
 	PackageCheck,
 	RefreshCw,
+	Trash2,
 } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { SearchBox } from "@/components/SearchBox";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
@@ -23,6 +26,12 @@ import {
 	DialogHeader,
 	DialogTitle,
 } from "@/components/ui/dialog";
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import {
@@ -59,9 +68,14 @@ function formatDate(seconds: number): string {
 
 function BackupsPage() {
 	const queryClient = useQueryClient();
+	const [searchQuery, setSearchQuery] = useState("");
 	const [selectedBackup, setSelectedBackup] = useState<TauriBackupInfo | null>(
 		null,
 	);
+	const [backupToDelete, setBackupToDelete] = useState<TauriBackupInfo | null>(
+		null,
+	);
+	const [isDeleting, setIsDeleting] = useState(false);
 	const [customFolderName, setCustomFolderName] = useState("");
 	const [restoreResult, setRestoreResult] =
 		useState<TauriRestoreResult | null>(null);
@@ -80,12 +94,46 @@ function BackupsPage() {
 		queryFn: commands.environmentListBackups,
 	});
 
+	const filteredBackups = useMemo(() => {
+		if (!backupsQuery.data) return [];
+		if (!searchQuery.trim()) return backupsQuery.data;
+		const q = searchQuery.toLowerCase();
+		return backupsQuery.data.filter(
+			(b) =>
+				b.file_name.toLowerCase().includes(q) ||
+				b.path.toLowerCase().includes(q),
+		);
+	}, [backupsQuery.data, searchQuery]);
+
 	const handleOpenRestoreModal = (backup: TauriBackupInfo) => {
 		setSelectedBackup(backup);
 		const defaultStem = backup.file_name.replace(/\.(zip|tar|gz)$/i, "");
 		setCustomFolderName(defaultStem);
 		setRestoreProgress(null);
 		setIsRestoring(false);
+	};
+
+	const handleOpenBackupDir = async (backup: TauriBackupInfo) => {
+		try {
+			await commands.utilOpen(backup.path, "open-folder");
+		} catch (err) {
+			toastError(`Failed to open backup folder: ${String(err)}`);
+		}
+	};
+
+	const handleConfirmDelete = async () => {
+		if (!backupToDelete) return;
+		try {
+			setIsDeleting(true);
+			await commands.environmentDeleteBackup(backupToDelete.path);
+			toastSuccess(`Deleted backup: ${backupToDelete.file_name}`);
+			setBackupToDelete(null);
+			void backupsQuery.refetch();
+		} catch (err) {
+			toastError(`Failed to delete backup: ${String(err)}`);
+		} finally {
+			setIsDeleting(false);
+		}
 	};
 
 	const handleConfirmRestore = () => {
@@ -166,7 +214,7 @@ function BackupsPage() {
 	return (
 		<div className="flex flex-col h-full w-full p-4 overflow-hidden gap-4">
 			{/* Page Header */}
-			<div className="flex items-center justify-between shrink-0">
+			<div className="flex items-center justify-between shrink-0 gap-4">
 				<div>
 					<h1 className="text-2xl font-bold flex items-center gap-2">
 						<ArchiveRestore className="h-6 w-6 text-primary" />
@@ -177,50 +225,28 @@ function BackupsPage() {
 						can restore any backup archive to your Default Project Path.
 					</p>
 				</div>
-				<Tooltip>
-					<TooltipTrigger asChild>
-						<Button
-							variant="outline"
-							size="icon"
-							onClick={() => void backupsQuery.refetch()}
-							disabled={backupsQuery.isFetching}
-						>
-							<RefreshCw
-								className={`h-4 w-4 ${backupsQuery.isFetching ? "animate-spin" : ""}`}
-							/>
-						</Button>
-					</TooltipTrigger>
-					<TooltipContent>Refresh Backup List</TooltipContent>
-				</Tooltip>
-			</div>
-
-			{/* Info Cards */}
-			<div className="grid grid-cols-1 md:grid-cols-2 gap-3 shrink-0">
-				<Card className="p-3 flex items-center gap-3 bg-card/60">
-					<Folder className="h-5 w-5 text-primary shrink-0" />
-					<div className="overflow-hidden">
-						<div className="text-xs text-muted-foreground font-semibold">
-							Backup Path
-						</div>
-						<div className="text-sm font-mono truncate" title={backupPath}>
-							{backupPath}
-						</div>
-					</div>
-				</Card>
-				<Card className="p-3 flex items-center gap-3 bg-card/60">
-					<HardDrive className="h-5 w-5 text-primary shrink-0" />
-					<div className="overflow-hidden">
-						<div className="text-xs text-muted-foreground font-semibold">
-							Default Project Path
-						</div>
-						<div
-							className="text-sm font-mono truncate"
-							title={defaultProjectPath}
-						>
-							{defaultProjectPath}
-						</div>
-					</div>
-				</Card>
+				<div className="flex items-center gap-2 shrink-0">
+					<SearchBox
+						className="w-64"
+						value={searchQuery}
+						onChange={(e) => setSearchQuery(e.target.value)}
+					/>
+					<Tooltip>
+						<TooltipTrigger asChild>
+							<Button
+								variant="outline"
+								size="icon"
+								onClick={() => void backupsQuery.refetch()}
+								disabled={backupsQuery.isFetching}
+							>
+								<RefreshCw
+									className={`h-4 w-4 ${backupsQuery.isFetching ? "animate-spin" : ""}`}
+								/>
+							</Button>
+						</TooltipTrigger>
+						<TooltipContent>Refresh Backup List</TooltipContent>
+					</Tooltip>
+				</div>
 			</div>
 
 			{/* Table Content */}
@@ -233,10 +259,14 @@ function BackupsPage() {
 					<div className="flex items-center justify-center h-48 text-destructive font-semibold">
 						Failed to load backups: {String(backupsQuery.error)}
 					</div>
-				) : !backupsQuery.data || backupsQuery.data.length === 0 ? (
+				) : filteredBackups.length === 0 ? (
 					<div className="flex flex-col items-center justify-center h-48 text-muted-foreground gap-2">
 						<ArchiveRestore className="h-10 w-10 opacity-40" />
-						<span>No backup archives found in your Backup Path.</span>
+						<span>
+							{searchQuery
+								? "No backup archives match your search query."
+								: "No backup archives found in your Backup Path."}
+						</span>
 					</div>
 				) : (
 					<table className="w-full text-left text-sm border-collapse">
@@ -249,7 +279,7 @@ function BackupsPage() {
 							</tr>
 						</thead>
 						<tbody className="divide-y">
-							{backupsQuery.data.map((backup) => (
+							{filteredBackups.map((backup) => (
 								<tr
 									key={backup.path}
 									className="hover:bg-muted/40 transition-colors"
@@ -269,14 +299,43 @@ function BackupsPage() {
 										{formatBytes(backup.size_bytes)}
 									</td>
 									<td className="p-3 text-right whitespace-nowrap">
-										<Button
-											size="sm"
-											variant="default"
-											onClick={() => handleOpenRestoreModal(backup)}
-										>
-											<ArchiveRestore className="h-4 w-4 mr-1.5" />
-											Restore
-										</Button>
+										<DropdownMenu>
+											<div className="inline-flex divide-x rounded-md shadow-xs">
+												<Button
+													size="sm"
+													variant="default"
+													className="rounded-r-none"
+													onClick={() => handleOpenRestoreModal(backup)}
+												>
+													<ArchiveRestore className="h-4 w-4 mr-1.5" />
+													Restore
+												</Button>
+												<DropdownMenuTrigger asChild>
+													<Button
+														size="sm"
+														variant="default"
+														className="rounded-l-none px-1.5"
+													>
+														<ChevronDown className="h-4 w-4" />
+													</Button>
+												</DropdownMenuTrigger>
+											</div>
+											<DropdownMenuContent align="end">
+												<DropdownMenuItem
+													onClick={() => void handleOpenBackupDir(backup)}
+												>
+													<Folder className="h-4 w-4 mr-2" />
+													Open Backup Directory
+												</DropdownMenuItem>
+												<DropdownMenuItem
+													className="text-destructive focus:text-destructive"
+													onClick={() => setBackupToDelete(backup)}
+												>
+													<Trash2 className="h-4 w-4 mr-2" />
+													Delete Backup
+												</DropdownMenuItem>
+											</DropdownMenuContent>
+										</DropdownMenu>
 									</td>
 								</tr>
 							))}
@@ -284,6 +343,50 @@ function BackupsPage() {
 					</table>
 				)}
 			</Card>
+
+			{/* Delete Backup Confirmation Dialog */}
+			<Dialog
+				open={backupToDelete !== null}
+				onOpenChange={(open) => !open && setBackupToDelete(null)}
+			>
+				<DialogContent className="max-w-md">
+					<DialogHeader>
+						<DialogTitle className="flex items-center gap-2 text-destructive">
+							<Trash2 className="h-5 w-5" />
+							Delete Backup Archive
+						</DialogTitle>
+					</DialogHeader>
+
+					<div className="py-2 text-sm">
+						<p>
+							Are you sure you want to delete{" "}
+							<strong className="font-mono">{backupToDelete?.file_name}</strong>
+							?
+						</p>
+						<p className="text-xs text-muted-foreground mt-1.5 font-mono truncate">
+							{backupToDelete?.path}
+						</p>
+						<p className="text-xs text-destructive mt-2 font-semibold">
+							This action cannot be undone.
+						</p>
+					</div>
+
+					<DialogFooter className="gap-2">
+						<DialogClose asChild>
+							<Button variant="outline" disabled={isDeleting}>
+								{tc("general:button:cancel")}
+							</Button>
+						</DialogClose>
+						<Button
+							variant="destructive"
+							onClick={handleConfirmDelete}
+							disabled={isDeleting}
+						>
+							{isDeleting ? "Deleting..." : "Delete Backup"}
+						</Button>
+					</DialogFooter>
+				</DialogContent>
+			</Dialog>
 
 			{/* Restore Confirmation Dialog */}
 			<Dialog
@@ -372,109 +475,79 @@ function BackupsPage() {
 					<DialogHeader>
 						<DialogTitle className="flex items-center gap-2">
 							<PackageCheck className="h-5 w-5 text-primary" />
-							Restored Project - VPM Packages
+							VPM Package Dependencies
 						</DialogTitle>
 					</DialogHeader>
 
-					<div className="flex flex-col gap-4 py-2 text-sm max-h-[60vh] overflow-y-auto">
-						<p className="text-muted-foreground">
-							Project extracted to{" "}
-							<code className="text-xs font-mono">
-								{restoreResult?.dest_path}
-							</code>
-							.
+					<div className="flex flex-col gap-3 py-2 text-sm">
+						<p>
+							Backup restoration complete! ALCOM detected VPM package dependencies
+							for this project:
 						</p>
 
-						{/* Packages Ready to Install */}
-						{restoreResult?.pending_changes &&
-						restoreResult.pending_changes.package_changes.length > 0 ? (
-							<div className="flex flex-col gap-2">
-								<h3 className="font-semibold text-foreground flex items-center gap-1.5">
-									<CheckCircle2 className="h-4 w-4 text-green-500" />
-									Packages Excluded from Backup (Ready to Re-install)
-								</h3>
-								<p className="text-xs text-muted-foreground">
-									The following packages were detected in project dependencies
-									and will be downloaded from your repositories:
-								</p>
-								<div className="border rounded-md divide-y max-h-48 overflow-y-auto bg-card">
+						{restoreResult?.pending_changes && (
+							<div className="flex flex-col gap-2 p-3 rounded-md bg-muted/40 border">
+								<span className="font-semibold text-xs text-foreground flex items-center gap-1.5">
+									<CheckCircle2 className="h-4 w-4 text-emerald-500" />
+									Available Packages to Install:
+								</span>
+								<ul className="text-xs font-mono space-y-1 pl-5 list-disc max-h-36 overflow-y-auto">
 									{restoreResult.pending_changes.package_changes.map(
-										([pkgId, change]) => (
-											<div
-												key={pkgId}
-												className="p-2.5 flex items-center justify-between text-xs font-mono"
-											>
-												<span className="font-semibold text-foreground">
-													{pkgId}
-												</span>
-												<span className="text-muted-foreground">
-													{change.type === "InstallNew"
-														? `v${change.install.version}`
-														: change.type}
-												</span>
-											</div>
+										([name, change]) => (
+											<li key={name}>
+												<span className="font-semibold">{name}</span>
+											</li>
 										),
 									)}
-								</div>
-							</div>
-						) : null}
-
-						{/* Missing / Unresolvable Dependencies Warning */}
-						{restoreResult?.missing_dependencies &&
-						restoreResult.missing_dependencies.length > 0 ? (
-							<div className="flex flex-col gap-2 p-3 rounded-md border border-amber-500/40 bg-amber-500/10 text-amber-900 dark:text-amber-200">
-								<div className="flex items-center justify-between gap-2">
-									<h3 className="font-semibold flex items-center gap-1.5">
-										<AlertCircle className="h-4 w-4 text-amber-500 shrink-0" />
-										Unresolvable Package Dependencies
-									</h3>
-									<Button
-										size="sm"
-										variant="outline"
-										className="h-7 text-xs gap-1 border-amber-500/40 bg-amber-500/10 hover:bg-amber-500/20"
-										onClick={handleCopyMissingDependencies}
-									>
-										<Copy className="h-3.5 w-3.5" />
-										Copy Missing
-									</Button>
-								</div>
-								<p className="text-xs">
-									The following required packages could not be found in your
-									currently installed ALCOM repositories. You may need to add
-									their corresponding repository feeds to restore them:
-								</p>
-								<ul className="list-disc list-inside font-mono text-xs space-y-0.5 pl-1">
-									{restoreResult.missing_dependencies.map((dep) => (
-										<li key={dep}>{dep}</li>
-									))}
 								</ul>
 							</div>
-						) : null}
+						)}
+
+						{restoreResult?.missing_dependencies &&
+							restoreResult.missing_dependencies.length > 0 && (
+								<div className="flex flex-col gap-2 p-3 rounded-md bg-destructive/10 border border-destructive/20">
+									<div className="flex items-center justify-between">
+										<span className="font-semibold text-xs text-destructive flex items-center gap-1.5">
+											<AlertCircle className="h-4 w-4" />
+											Unresolvable / Missing Dependencies:
+										</span>
+										<Button
+											size="xs"
+											variant="outline"
+											className="h-6 text-[11px] gap-1"
+											onClick={handleCopyMissingDependencies}
+										>
+											<Copy className="h-3 w-3" />
+											Copy Missing
+										</Button>
+									</div>
+									<ul className="text-xs font-mono space-y-1 pl-5 list-disc max-h-36 overflow-y-auto text-destructive">
+										{restoreResult.missing_dependencies.map((dep) => (
+											<li key={dep}>{dep}</li>
+										))}
+									</ul>
+								</div>
+							)}
 					</div>
 
 					<DialogFooter className="gap-2">
-						<Button variant="outline" onClick={() => setRestoreResult(null)}>
-							{restoreResult?.pending_changes &&
-							restoreResult.pending_changes.package_changes.length > 0
-								? "Skip for Now"
-								: "Close"}
-						</Button>
-						{restoreResult?.pending_changes &&
-						restoreResult.pending_changes.package_changes.length > 0 ? (
+						<DialogClose asChild>
+							<Button variant="outline" disabled={isApplyingChanges}>
+								Skip / Close
+							</Button>
+						</DialogClose>
+						{restoreResult?.pending_changes && (
 							<Button
 								variant="default"
 								onClick={handleApplyPendingChanges}
 								disabled={isApplyingChanges}
 							>
-								{isApplyingChanges
-									? "Installing Packages..."
-									: "Install Packages"}
+								{isApplyingChanges ? "Installing..." : "Install Packages"}
 							</Button>
-						) : null}
+						)}
 					</DialogFooter>
 				</DialogContent>
 			</Dialog>
 		</div>
 	);
-}
 

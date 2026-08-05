@@ -64,6 +64,7 @@ export const commands = {
 	environmentPickProjectBackupPath: () => __TAURI_INVOKE<TauriPickProjectBackupPathResult>("environment_pick_project_backup_path"),
 	environmentListBackups: () => __TAURI_INVOKE<TauriBackupInfo[]>("environment_list_backups"),
 	environmentRestoreBackup: (channel: string, zipPath: string, customName: string | null) => __TAURI_INVOKE<AsyncCallResult<TauriRestoreBackupProgress, TauriRestoreResult>>("environment_restore_backup", { channel, zipPath, customName }),
+	environmentDeleteBackup: (backupPath: string) => __TAURI_INVOKE<null>("environment_delete_backup", { backupPath }),
 	environmentSetShowPrereleasePackages: (value: boolean) => __TAURI_INVOKE<null>("environment_set_show_prerelease_packages", { value }),
 	environmentSetBackupFormat: (backupFormat: string) => __TAURI_INVOKE<null>("environment_set_backup_format", { backupFormat }),
 	environmentSetExcludeVpmPackagesFromBackup: (excludeVpmPackagesFromBackup: boolean) => __TAURI_INVOKE<null>("environment_set_exclude_vpm_packages_from_backup", { excludeVpmPackagesFromBackup }),

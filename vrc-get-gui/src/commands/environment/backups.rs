@@ -53,6 +53,21 @@ pub struct TauriRestoreResult {
 
 #[tauri::command]
 #[specta::specta]
+pub async fn environment_delete_backup(
+	backup_path: String,
+) -> Result<(), RustError> {
+	let path = Path::new(&backup_path);
+	if !path.exists() {
+		return Err(RustError::unrecoverable_str(format!(
+			"Backup file does not exist: {backup_path}"
+		)));
+	}
+	tokio::fs::remove_file(path).await?;
+	Ok(())
+}
+
+#[tauri::command]
+#[specta::specta]
 pub async fn environment_list_backups(
 	settings: State<'_, SettingsState>,
 	io: State<'_, DefaultEnvironmentIo>,
