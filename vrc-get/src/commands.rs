@@ -397,6 +397,7 @@ pub enum Command {
     Repo(Repo),
     #[command(subcommand)]
     Backup(backup::Backup),
+    #[command(subcommand)]
     Catalog(catalog::Catalog),
     #[command(subcommand)]
     UserPackage(UserPackage),
