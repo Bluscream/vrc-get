@@ -38,6 +38,12 @@ export const commands = {
 	environmentHideRepository: (repository: string) => __TAURI_INVOKE<null>("environment_hide_repository", { repository }),
 	environmentShowRepository: (repository: string) => __TAURI_INVOKE<null>("environment_show_repository", { repository }),
 	environmentSetHideLocalUserPackages: (value: boolean) => __TAURI_INVOKE<null>("environment_set_hide_local_user_packages", { value }),
+	environmentFetchRepositoryInfo: (url: string, headers: { [key in string]: string }) => __TAURI_INVOKE<{
+	display_name: string,
+	id: string,
+	url: string,
+	packages: TauriBasePackageInfo[],
+} | null>("environment_fetch_repository_info", { url, headers }),
 	environmentDownloadRepository: (url: string, headers: { [key in string]: string }) => __TAURI_INVOKE<TauriDownloadRepository>("environment_download_repository", { url, headers }),
 	environmentAddRepository: (url: string, headers: { [key in string]: string }) => __TAURI_INVOKE<TauriAddRepositoryResult>("environment_add_repository", { url, headers }),
 	environmentRemoveRepository: (index: number, expectedId: string) => __TAURI_INVOKE<null>("environment_remove_repository", { index, expectedId }),
@@ -56,6 +62,8 @@ export const commands = {
 	environmentPickUnity: () => __TAURI_INVOKE<TauriPickUnityResult>("environment_pick_unity"),
 	environmentPickProjectDefaultPath: () => __TAURI_INVOKE<TauriPickProjectDefaultPathResult>("environment_pick_project_default_path"),
 	environmentPickProjectBackupPath: () => __TAURI_INVOKE<TauriPickProjectBackupPathResult>("environment_pick_project_backup_path"),
+	environmentListBackups: () => __TAURI_INVOKE<TauriBackupInfo[]>("environment_list_backups"),
+	environmentRestoreBackup: (channel: string, zipPath: string, customName: string | null) => __TAURI_INVOKE<AsyncCallResult<TauriRestoreBackupProgress, TauriRestoreResult>>("environment_restore_backup", { channel, zipPath, customName }),
 	environmentSetShowPrereleasePackages: (value: boolean) => __TAURI_INVOKE<null>("environment_set_show_prerelease_packages", { value }),
 	environmentSetBackupFormat: (backupFormat: string) => __TAURI_INVOKE<null>("environment_set_backup_format", { backupFormat }),
 	environmentSetExcludeVpmPackagesFromBackup: (excludeVpmPackagesFromBackup: boolean) => __TAURI_INVOKE<null>("environment_set_exclude_vpm_packages_from_backup", { excludeVpmPackagesFromBackup }),
@@ -214,6 +222,13 @@ export type TauriAlcomTemplate = {
 	unity_packages: string[],
 };
 
+export type TauriBackupInfo = {
+	file_name: string,
+	path: string,
+	size_bytes: number,
+	last_modified: number,
+};
+
 export type TauriBasePackageInfo = {
 	name: string,
 	display_name: string | null,
@@ -246,6 +261,9 @@ export type TauriCreateBackupProgress = {
 	total: number,
 	proceed: number,
 	last_proceed: string,
+	written_bytes?: number,
+	total_bytes?: number,
+	bytes_per_sec?: number,
 };
 
 export type TauriCreateProjectResult = "AlreadyExists" | "TemplateNotFound" | "Successful";
@@ -475,4 +493,21 @@ export type UpdaterStatus =
  *  `VRC_GET_GUI_UPDATER_UPDATE_SUGGESTION_MESSAGE` environment variable at build time.
  */
 "UpdaterDisabled";
+
+export type TauriRestoreBackupProgress = {
+	total: number,
+	proceed: number,
+	last_proceed: string,
+	read_bytes?: number,
+	total_bytes?: number,
+	bytes_per_sec?: number,
+};
+
+export type TauriRestoreResult = {
+	dest_path: string,
+	should_resolve: boolean,
+	pending_changes: TauriPendingProjectChanges | null,
+	missing_dependencies: string[],
+};
+
 

@@ -107,6 +107,7 @@
 
 // Projects Page
     "projects": "Projects",
+    "backups": "Backups",
     "projects:tooltip:refresh": "Refresh Projects",
     "projects:create new project": "Create New Project",
     "projects:add existing project": "Add Existing Project",

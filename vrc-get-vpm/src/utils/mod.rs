@@ -12,7 +12,7 @@ pub(crate) use copy_recursive::copy_recursive;
 pub(crate) use crlf_json_formatter::to_vec_pretty_os_eol;
 pub(crate) use deup_deserializer::DedupForwarder;
 use either::Either;
-pub(crate) use extract_zip::extract_zip;
+pub use extract_zip::{extract_zip, extract_zip_with_progress};
 use futures::prelude::*;
 use futures::stream::FuturesUnordered;
 use pin_project_lite::pin_project;

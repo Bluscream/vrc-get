@@ -112,6 +112,8 @@ pub(crate) fn handlers() -> impl Fn(Invoke) -> bool + Send + Sync + 'static {
         environment::settings::environment_pick_unity,
         environment::settings::environment_pick_project_default_path,
         environment::settings::environment_pick_project_backup_path,
+        environment::backups::environment_list_backups,
+        environment::backups::environment_restore_backup,
         environment::settings::environment_set_show_prerelease_packages,
         environment::settings::environment_set_backup_format,
         environment::settings::environment_set_exclude_vpm_packages_from_backup,
@@ -166,7 +168,7 @@ pub(crate) fn handlers() -> impl Fn(Invoke) -> bool + Send + Sync + 'static {
     ]
 }
 
-#[cfg(dev)]
+#[cfg(any(dev, test))]
 pub(crate) fn export_ts() {
     let export_path = "lib/bindings.ts";
     tauri_specta::Builder::new()
@@ -225,6 +227,8 @@ pub(crate) fn export_ts() {
             environment::settings::environment_pick_unity,
             environment::settings::environment_pick_project_default_path,
             environment::settings::environment_pick_project_backup_path,
+            environment::backups::environment_list_backups,
+            environment::backups::environment_restore_backup,
             environment::settings::environment_set_show_prerelease_packages,
             environment::settings::environment_set_backup_format,
             environment::settings::environment_set_exclude_vpm_packages_from_backup,
@@ -281,6 +285,11 @@ pub(crate) fn export_ts() {
         .typ::<environment::projects::TauriUpdatedRealProjectInfo>()
         .export(specta_typescript::Typescript::default(), export_path)
         .unwrap();
+}
+
+#[test]
+fn test_export_ts() {
+    export_ts();
 }
 
 async fn update_project_last_modified(io: &DefaultEnvironmentIo, project_dir: &Path) {

@@ -16,6 +16,7 @@ import { Route as MainSettingsIndexRouteImport } from './../app/_main/settings/i
 import { Route as MainProjectsIndexRouteImport } from './../app/_main/projects/index'
 import { Route as MainLogIndexRouteImport } from './../app/_main/log/index'
 import { Route as MainDevPaletteIndexRouteImport } from './../app/_main/dev-palette/index'
+import { Route as MainBackupsIndexRouteImport } from './../app/_main/backups/index'
 import { Route as SetupSetupUnityHubIndexRouteImport } from './../app/_setup/setup/unity-hub/index'
 import { Route as SetupSetupSystemSettingIndexRouteImport } from './../app/_setup/setup/system-setting/index'
 import { Route as SetupSetupProjectPathIndexRouteImport } from './../app/_setup/setup/project-path/index'
@@ -60,6 +61,11 @@ const MainLogIndexRoute = MainLogIndexRouteImport.update({
 const MainDevPaletteIndexRoute = MainDevPaletteIndexRouteImport.update({
   id: '/dev-palette/',
   path: '/dev-palette/',
+  getParentRoute: () => MainRouteRoute,
+} as any)
+const MainBackupsIndexRoute = MainBackupsIndexRouteImport.update({
+  id: '/backups/',
+  path: '/backups/',
   getParentRoute: () => MainRouteRoute,
 } as any)
 const SetupSetupUnityHubIndexRoute = SetupSetupUnityHubIndexRouteImport.update({
@@ -133,6 +139,7 @@ const MainPackagesCatalogIndexRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/backups/': typeof MainBackupsIndexRoute
   '/dev-palette/': typeof MainDevPaletteIndexRoute
   '/log/': typeof MainLogIndexRoute
   '/projects/': typeof MainProjectsIndexRoute
@@ -152,6 +159,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/backups': typeof MainBackupsIndexRoute
   '/dev-palette': typeof MainDevPaletteIndexRoute
   '/log': typeof MainLogIndexRoute
   '/projects': typeof MainProjectsIndexRoute
@@ -174,6 +182,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_main': typeof MainRouteRouteWithChildren
   '/_setup': typeof SetupRouteRouteWithChildren
+  '/_main/backups/': typeof MainBackupsIndexRoute
   '/_main/dev-palette/': typeof MainDevPaletteIndexRoute
   '/_main/log/': typeof MainLogIndexRoute
   '/_main/projects/': typeof MainProjectsIndexRoute
@@ -195,6 +204,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/backups/'
     | '/dev-palette/'
     | '/log/'
     | '/projects/'
@@ -214,6 +224,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/backups'
     | '/dev-palette'
     | '/log'
     | '/projects'
@@ -235,6 +246,7 @@ export interface FileRouteTypes {
     | '/'
     | '/_main'
     | '/_setup'
+    | '/_main/backups/'
     | '/_main/dev-palette/'
     | '/_main/log/'
     | '/_main/projects/'
@@ -308,6 +320,13 @@ declare module '@tanstack/react-router' {
       path: '/dev-palette'
       fullPath: '/dev-palette/'
       preLoaderRoute: typeof MainDevPaletteIndexRouteImport
+      parentRoute: typeof MainRouteRoute
+    }
+    '/_main/backups/': {
+      id: '/_main/backups/'
+      path: '/backups'
+      fullPath: '/backups/'
+      preLoaderRoute: typeof MainBackupsIndexRouteImport
       parentRoute: typeof MainRouteRoute
     }
     '/_setup/setup/unity-hub/': {
@@ -398,6 +417,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface MainRouteRouteChildren {
+  MainBackupsIndexRoute: typeof MainBackupsIndexRoute
   MainDevPaletteIndexRoute: typeof MainDevPaletteIndexRoute
   MainLogIndexRoute: typeof MainLogIndexRoute
   MainProjectsIndexRoute: typeof MainProjectsIndexRoute
@@ -411,6 +431,7 @@ interface MainRouteRouteChildren {
 }
 
 const MainRouteRouteChildren: MainRouteRouteChildren = {
+  MainBackupsIndexRoute: MainBackupsIndexRoute,
   MainDevPaletteIndexRoute: MainDevPaletteIndexRoute,
   MainLogIndexRoute: MainLogIndexRoute,
   MainProjectsIndexRoute: MainProjectsIndexRoute,

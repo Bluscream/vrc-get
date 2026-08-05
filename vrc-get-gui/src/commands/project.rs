@@ -51,7 +51,7 @@ pub async fn project_details(project_path: String) -> Result<TauriProjectDetails
     })
 }
 
-#[derive(Serialize, specta::Type)]
+#[derive(Clone, Serialize, specta::Type)]
 pub struct TauriPendingProjectChanges {
     changes_version: u32,
     package_changes: Vec<(String, TauriPackageChange)>,
@@ -63,6 +63,12 @@ pub struct TauriPendingProjectChanges {
 }
 
 impl TauriPendingProjectChanges {
+    pub fn is_empty(&self) -> bool {
+        self.package_changes.is_empty()
+            && self.remove_legacy_files.is_empty()
+            && self.remove_legacy_folders.is_empty()
+    }
+
     pub fn new(version: u32, changes: &PendingProjectChanges) -> Self {
         TauriPendingProjectChanges {
             changes_version: version,
@@ -90,7 +96,7 @@ impl TauriPendingProjectChanges {
     }
 }
 
-#[derive(Serialize, specta::Type)]
+#[derive(Clone, Serialize, specta::Type)]
 enum TauriPackageChange {
     InstallNew(Box<TauriBasePackageInfo>),
     Remove(TauriRemoveReason),
@@ -110,7 +116,7 @@ impl TryFrom<&PackageChange<'_>> for TauriPackageChange {
     }
 }
 
-#[derive(Serialize, specta::Type)]
+#[derive(Clone, Serialize, specta::Type)]
 enum TauriRemoveReason {
     Requested,
     Legacy,
@@ -127,7 +133,7 @@ impl From<RemoveReason> for TauriRemoveReason {
     }
 }
 
-#[derive(Serialize, specta::Type)]
+#[derive(Clone, Serialize, specta::Type)]
 struct TauriConflictInfo {
     packages: Vec<String>,
     unity_conflict: bool,

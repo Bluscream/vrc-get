@@ -112,6 +112,20 @@ impl UnityProject {
         &self,
         env: &'env impl PackageCollection,
     ) -> Result<PendingProjectChanges<'env>, ResolvePackageErr> {
+        let (changes, missing) = self.resolve_request_partial(env).await;
+        if missing.is_empty() {
+            Ok(changes)
+        } else {
+            Err(ResolvePackageErr::DependenciesNotFound {
+                dependencies: missing,
+            })
+        }
+    }
+
+    pub async fn resolve_request_partial<'env>(
+        &self,
+        env: &'env impl PackageCollection,
+    ) -> (PendingProjectChanges<'env>, Vec<(Box<str>, VersionRange)>) {
         let mut changes = pending_project_changes::Builder::new();
         let mut missing_dependencies = MissingDependencies::new();
 
@@ -129,18 +143,12 @@ impl UnityProject {
 
         // then, process packages in dependencies but not in locked.
         // This usually happens with template projects.
-        self.add_just_dependency(env, &mut changes, &mut missing_dependencies)?;
+        let _ = self.add_just_dependency(env, &mut changes, &mut missing_dependencies);
 
         // finally, process dependencies of unlocked packages.
-        self.resolve_unlocked(env, &mut changes, &mut missing_dependencies)?;
+        let _ = self.resolve_unlocked(env, &mut changes, &mut missing_dependencies);
 
-        if missing_dependencies.is_empty() {
-            Ok(changes.build_resolve(self).await)
-        } else {
-            Err(ResolvePackageErr::DependenciesNotFound {
-                dependencies: missing_dependencies.into_vec(),
-            })
-        }
+        (changes.build_resolve(self).await, missing_dependencies.into_vec())
     }
 
     fn add_just_dependency<'env>(

@@ -19,7 +19,7 @@ pub mod repository;
 mod structs;
 mod traits;
 pub mod unity_project;
-mod utils;
+pub mod utils;
 pub mod version;
 mod version_selector;
 

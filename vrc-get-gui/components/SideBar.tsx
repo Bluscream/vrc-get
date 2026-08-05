@@ -8,6 +8,7 @@ import {
 } from "@tanstack/react-router";
 import {
 	AlignLeft,
+	ArchiveRestore,
 	CircleAlert,
 	Info,
 	List,
@@ -75,6 +76,11 @@ export function SideBar({ className }: { className?: string }) {
 		>
 			<div className="flex flex-col gap-1 p-2 min-w-40 grow compact:min-w-0">
 				<SideBarItem href={"/projects"} text={tc("projects")} icon={List} />
+				<SideBarItem
+					href={"/backups"}
+					text={tc("backups")}
+					icon={ArchiveRestore}
+				/>
 				<SideBarItem
 					href={"/packages/repositories"}
 					text={tc("resources")}
