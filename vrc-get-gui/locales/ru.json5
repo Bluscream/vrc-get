@@ -24,8 +24,8 @@
     // Used in place of date part but not known
     "general:unknown date": "Неизвестная дата",
 
-    "general:dialog:select file or directory header": "Выбор файла или папки",
-    "general:dialog:select file or directory": "Выберите файл или папку.",
+    "general:dialog:select file or directory header": "Выбор файла или каталога",
+    "general:dialog:select file or directory": "Выберите файл или каталог.",
     "general:toast:invalid directory": "Выбран недопустимый каталог.",
     "general:toast:invalid file": "Выбран недопустимый файл.",
 
@@ -75,14 +75,14 @@
     "setup:unity-hub:detection failed description": "Нажмите кнопку \"Проверить снова\" выше, чтобы повторно обнаружить Unity Hub. Если это не работает, ALCOM не может обнаружить установленный Unity Hub. Укажите путь к Unity Hub вручную ниже.",
     "setup:unity-hub:not found": "Unity Hub не найден.",
 
-    "setup:steps card:ProjectPath": "Папка сохранения",
-    "setup:project-path:heading": "Папка сохранения проекта",
+    "setup:steps card:ProjectPath": "Каталог сохранения",
+    "setup:project-path:heading": "Каталог сохранения проекта",
     "setup:project-path:description": "Когда вы создаете проект через ALCOM, он будет сохранен в этом расположении.",
 
     "setup:steps card:Backups": "Настройки резервного копирования",
     "setup:backups:heading": "Настройки резервного копирования проекта",
-    "setup:backups:location": "Папка для резервных копий",
-    "setup:backups:location description": "При создании резервной копии проекта архив будет сохранен в эту папку.",
+    "setup:backups:location": "Каталог резервных копий",
+    "setup:backups:location description": "При создании резервной копии проекта архив будет сохранен в этот каталог.",
     "setup:backups:archive": "Формат архива",
 
     "setup:steps card:SystemSetting": "Системные настройки",
@@ -127,15 +127,15 @@
     "projects:button:open unity": "Открыть Unity",
     "projects:button:manage": "Управление",
     "projects:backup": "Резервная копия",
-    "projects:menuitem:open directory": "Открыть папку проекта",
+    "projects:menuitem:open directory": "Открыть каталог проекта",
     "projects:remove project": "Удалить проект",
     "projects:tooltip:no directory": "Проект не существует в этом расположении.",
-    "projects:tooltip:invalid project": "Папка проекта существует, но это недопустимый проект",
+    "projects:tooltip:invalid project": "Каталог проекта существует, но это недопустимый проект",
 
     "projects:hint:invalid project name": "Недопустимое имя проекта.",
     "projects:hint:warn symbol in project name": "Использование таких символов может вызвать проблемы.",
     "projects:hint:warn multibyte char in project name": "Использование многобайтовых символов может вызвать проблемы.",
-    "projects:hint:project already exists": "Папка уже существует.",
+    "projects:hint:project already exists": "Каталог уже существует.",
     "projects:hint:create project ready": "Готово к созданию проекта!",
     "projects:template": "Шаблон:",
     "projects:template-category:favorites": "Избранное",
@@ -196,7 +196,7 @@
 
     "projects:dialog:warn removing project": "Вы собираетесь удалить проект <strong>{{name}}</strong>. Продолжить?",
     "projects:button:remove from list": "Удалить из списка",
-    "projects:button:remove directory": "Удалить папку",
+    "projects:button:remove directory": "Удалить каталог",
     "projects:dialog:removing...": "Удаление проекта...",
     "projects:toast:project removed": "Проект успешно удален.",
 
@@ -276,12 +276,12 @@
     "projects:manage:dialog:downgrade major": "Вы понижаете Unity до другой мажорной версии. Эта операция не поддерживается Unity и может сломать проект.<br/>Сделайте резервную копию проекта перед продолжением.<br/>Продолжить?",
     "projects:manage:dialog:downgrade minor": "Вы понижаете версию Unity. Эта операция не поддерживается Unity и может сломать проект.<br/>Сделайте резервную копию проекта перед продолжением.<br/>Продолжить?",
     "projects:manage:dialog:downgrade minor vrchat unsupported": "Вы понижаете версию Unity. Эта операция не поддерживается Unity и может сломать проект.<br/>Сделайте резервную копию проекта перед продолжением.<br/>Кроме того, вы будете использовать версию Unity, не поддерживаемую VRChat, поэтому не сможете загружать контент в VRChat после понижения.<br/>Продолжить?",
-    "projects:manage:dialog:upgrade minor": "Вы повышаете версию Unity. Это может изменить скрипты, а папка Library может быть пересобрана.<br/>Сделайте резервную копию проекта перед продолжением.<br/>Продолжить?",
-    "projects:manage:dialog:upgrade minor vrchat unsupported": "Вы повышаете версию Unity. Это может изменить скрипты, а папка Library может быть пересобрана.<br/>Сделайте резервную копию проекта перед продолжением.<br/>Кроме того, вы будете использовать версию Unity, не поддерживаемую VRChat, поэтому не сможете загружать контент в VRChat после обновления.<br/>Продолжить?",
-    "projects:manage:dialog:upgrade major": "Вы повышаете мажорную версию Unity. Это может изменить скрипты, а папка Library может быть пересобрана.<br/>Сделайте резервную копию проекта перед продолжением.<br/>Продолжить?",
-    "projects:manage:dialog:upgrade major vrchat supported": "Вы мигрируете версию Unity. Это обновит VRCSDK, может изменить скрипты, а папка Library может быть пересобрана.<br/>Сделайте резервную копию проекта перед продолжением.<br/>Продолжить?",
-    "projects:manage:dialog:upgrade major vrchat unsupported": "Вы мигрируете версию Unity. Это обновит VRCSDK, может изменить скрипты, а папка Library может быть пересобрана.<br/>Сделайте резервную копию проекта перед продолжением.<br/>Кроме того, вы будете использовать версию Unity, не поддерживаемую VRChat, поэтому не сможете загружать контент в VRChat после обновления.<br/>Продолжить?",
-    "projects:manage:dialog:changing china releases": "Вы меняете версию Unity между китайскими релизами. Это может изменить скрипты, а папка Library может быть пересобрана.<br/>Сделайте резервную копию проекта перед продолжением.<br/>Продолжить?",
+    "projects:manage:dialog:upgrade minor": "Вы повышаете версию Unity. Это может изменить скрипты, а каталог Library может быть пересобран.<br/>Сделайте резервную копию проекта перед продолжением.<br/>Продолжить?",
+    "projects:manage:dialog:upgrade minor vrchat unsupported": "Вы повышаете версию Unity. Это может изменить скрипты, а каталог Library может быть пересобран.<br/>Сделайте резервную копию проекта перед продолжением.<br/>Кроме того, вы будете использовать версию Unity, не поддерживаемую VRChat, поэтому не сможете загружать контент в VRChat после обновления.<br/>Продолжить?",
+    "projects:manage:dialog:upgrade major": "Вы повышаете мажорную версию Unity. Это может изменить скрипты, а каталог Library может быть пересобран.<br/>Сделайте резервную копию проекта перед продолжением.<br/>Продолжить?",
+    "projects:manage:dialog:upgrade major vrchat supported": "Вы мигрируете версию Unity. Это обновит VRCSDK, может изменить скрипты, а каталог Library может быть пересобран.<br/>Сделайте резервную копию проекта перед продолжением.<br/>Продолжить?",
+    "projects:manage:dialog:upgrade major vrchat unsupported": "Вы мигрируете версию Unity. Это обновит VRCSDK, может изменить скрипты, а каталог Library может быть пересобран.<br/>Сделайте резервную копию проекта перед продолжением.<br/>Кроме того, вы будете использовать версию Unity, не поддерживаемую VRChat, поэтому не сможете загружать контент в VRChat после обновления.<br/>Продолжить?",
+    "projects:manage:dialog:changing china releases": "Вы меняете версию Unity между китайскими релизами. Это может изменить скрипты, а каталог Library может быть пересобран.<br/>Сделайте резервную копию проекта перед продолжением.<br/>Продолжить?",
     "projects:button:change unity version": "Изменить версию Unity",
 
     "projects:dialog:launch options": "Параметры запуска",
@@ -317,8 +317,8 @@
     "projects:manage:dialog:unity version conflicts_other": "Есть конфликты версии Unity.",
     "projects:manage:dialog:package not supported your unity": "<b>{{pkg}}</b> не поддерживает вашу версию Unity.",
     // TODO: plurals
-    "projects:manage:dialog:files and directories are removed as legacy": "Следующие устаревшие файлы и папки будут удалены.",
-    "projects:manage:dialog:packages installed in the following directories will be removed": "Пакеты, установленные в следующих папках, будут удалены.",
+    "projects:manage:dialog:files and directories are removed as legacy": "Следующие устаревшие файлы и каталоги будут удалены.",
+    "projects:manage:dialog:packages installed in the following directories will be removed": "Пакеты, установленные в следующих каталогах, будут удалены.",
     "projects:manage:button:see changelog": "Открыть журнал изменений",
     "projects:manage:button:apply changes": "Применить изменения",
     "projects:manage:button:apply": "Применить",
@@ -409,12 +409,12 @@
     "templates:tooltip:category:vcc": "Шаблоны VCC создаются вами вручную для VCC.",
     "templates:tooltip:remove template": "Удалить шаблон",
     "templates:tooltip:remove builtin template": "Нельзя удалить встроенные шаблоны.",
-    "templates:tooltip:remove vcc template": "Здесь нельзя удалить шаблоны VCC. Удалите их напрямую из папки шаблонов.",
+    "templates:tooltip:remove vcc template": "Здесь нельзя удалить шаблоны VCC. Удалите их напрямую из каталога шаблонов.",
     "templates:menuitem:edit template": "Редактировать шаблон",
     "templates:menuitem:duplicate template": "Дублировать шаблон",
     "templates:menuitem:export template": "Экспортировать шаблон",
     "templates:tooltip:export template with unitypackage": "Нельзя экспортировать шаблоны с .unitypackage, так как они непереносимы.",
-    "templates:menuitem:open vcc template": "Открыть папку шаблонов",
+    "templates:menuitem:open vcc template": "Открыть каталог шаблонов",
     "templates:dialog:edit template": "Редактировать шаблон",
     "templates:dialog:create template": "Создать шаблон",
     "templates:dialog:general information": "Общая информация",
@@ -446,7 +446,7 @@
 
     // Reset your PC is a feature in Windows, so please check your translation is consistent with Windows terminology.
     // It's at Setting app > System > Recovery > Reset this PC
-    "settings:warning:in-app-data": "Это расположение находится в папке AppData, которая будет удалена при использовании функции Windows \"Вернуть компьютер в исходное состояние\" с опцией \"Сохранить мои файлы\".<br>Рекомендуется сохранять данные в другом месте.",
+    "settings:warning:in-app-data": "Это расположение находится в каталоге AppData, который будет удален при использовании функции Windows \"Вернуть компьютер в исходное состояние\" с опцией \"Сохранить мои файлы\".<br>Рекомендуется сохранять данные в другом месте.",
     "settings:warning:whitespace": "Путь содержит пробелы. Пробелы могут вызывать проблемы с Unity и другими инструментами. Рассмотрите использование другого пути.",
     "settings:warning:non-ascii": "Путь содержит не-ASCII символы. Такие символы могут вызывать проблемы с Unity. Рассмотрите использование другого пути.",
 
@@ -473,11 +473,11 @@
     "settings:dialog:default launch arguments": "Аргументы командной строки Unity по умолчанию",
 
     "settings:default project path": "Путь проекта по умолчанию",
-    "settings:default project path description": "Путь проекта по умолчанию - папка, где создаются новые проекты.",
+    "settings:default project path description": "Путь проекта по умолчанию - каталог, где создаются новые проекты.",
     "settings:toast:default project path updated": "Путь проекта по умолчанию успешно обновлен!",
 
     "settings:backup:path": "Путь резервных копий",
-    "settings:backup:path description": "Путь резервных копий - это папка, где ALCOM будет создавать zip-архивы резервных копий проектов.",
+    "settings:backup:path description": "Путь резервных копий - это каталог, где ALCOM будет создавать zip-архивы резервных копий проектов.",
     "settings:toast:backup path updated": "Путь резервных копий проекта успешно обновлен.",
 
     "settings:backup:format": "Формат архива резервной копии",
@@ -512,12 +512,12 @@
     "settings:theme:light": "Светлая",
     "settings:theme:dark": "Темная",
 
-    "settings:files and directories": "Файлы и папки",
-    "settings:files and directories:description": "Быстрый доступ к файлам и папкам, связанным с ALCOM.",
+    "settings:files and directories": "Файлы и каталоги",
+    "settings:files and directories:description": "Быстрый доступ к файлам и каталогам, связанным с ALCOM.",
     "settings:button:open settings.json": "settings.json",
     "settings:button:open gui config.json": "gui-config.json",
-    "settings:button:open logs": "Папка логов",
-    "settings:button:open vcc templates": "Папка шаблонов VCC",
+    "settings:button:open logs": "Каталог логов",
+    "settings:button:open vcc templates": "Каталог шаблонов VCC",
 
     "settings:check update": "Проверить обновления",
     "settings:button:open issue": "Сообщить о проблеме",
