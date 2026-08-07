@@ -9,6 +9,7 @@ import enJson from "@/locales/en.json5";
 import frJson from "@/locales/fr.json5";
 import jaJson from "@/locales/ja.json5";
 import koJson from "@/locales/ko.json5";
+import ruJson from "@/locales/ru.json5";
 import zh_hansJson from "@/locales/zh_hans.json5";
 import zh_hantJson from "@/locales/zh_hant.json5";
 
@@ -18,6 +19,7 @@ const languageResources = {
 	ja: jaJson,
 	ko: koJson,
 	fr: frJson,
+	ru: ruJson,
 	zh_hans: zh_hansJson,
 	zh_hant: zh_hantJson,
 };
