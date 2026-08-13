@@ -56,12 +56,12 @@ module.exports = async ({github, context}) => {
 		{
 			id: 'es',
 			discussionNumber: 3122,
-			replyId: 'D_kwDOIza9ks4AocpM'
+			replyId: 'DC_kwDOIza9ks4BEqzH'
 		},
 		{
 			id: 'ru',
 			discussionNumber: 3123,
-			replyId: 'D_kwDOIza9ks4Aocq1'
+			replyId: 'DC_kwDOIza9ks4BEqzG'
 		},
 	];
 
