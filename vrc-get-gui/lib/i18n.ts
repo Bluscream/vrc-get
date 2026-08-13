@@ -6,6 +6,7 @@ import { ExternalLink } from "@/components/ExternalLink";
 import globalInfo from "@/lib/global-info";
 import deJson from "@/locales/de.json5";
 import enJson from "@/locales/en.json5";
+import esJson from "@/locales/es.json5";
 import frJson from "@/locales/fr.json5";
 import jaJson from "@/locales/ja.json5";
 import koJson from "@/locales/ko.json5";
@@ -15,6 +16,7 @@ import zh_hantJson from "@/locales/zh_hant.json5";
 
 const languageResources = {
 	en: enJson,
+	es: esJson,
 	de: deJson,
 	ja: jaJson,
 	ko: koJson,
