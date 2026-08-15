@@ -242,7 +242,7 @@
     "projects:manage:tooltip:remove packages": "패키지 제거",
     "projects:manage:tooltip:incompatible with unity": "현재 사용 중인 Unity와 호환되지 않습니다.",
     "projects:manage:menuitem:reinstall": "패키지 재설치",
-    "projects:manage:menuitem:see changelog": "변경 사항 보기",
+    "projects:manage:menuitem:see changelog": "변경 내역 보기",
     "projects:manage:menuitem:see documentation": "문서 보기",
     // note for translators: this key is used for button for installing or upgrading to the latest version of selected packages.
     //     It might be better to write both upgrade and latest depending on the language I think.
@@ -320,7 +320,7 @@
     "projects:manage:dialog:package not supported your unity": "현재 사용 중인 Unity 버전은 <b>{{pkg}}</b> 패키지와 호환되지 않습니다.",
     "projects:manage:dialog:files and directories are removed as legacy": "다음 레거시 파일 및 디렉토리가 제거됩니다.",
     "projects:manage:dialog:packages installed in the following directories will be removed": "다음 디렉토리에 설치된 패키지가 제거됩니다.",
-    "projects:manage:button:see changelog": "변경 사항 보기",
+    "projects:manage:button:see changelog": "변경 내역 보기",
     "projects:manage:button:apply changes": "변경 사항 적용",
     "projects:manage:button:apply": "적용",
 
@@ -483,7 +483,7 @@
     "settings:backup:format": "백업 형식",
     "settings:backup:format description": "\"기본값\" 설정에서는 ALCOM이 가장 적합하다고 판단한 형식이 사용되며, 괄호 안에 현재 기본 형식이 표시됩니다.<br>압축률이 높은 형식을 사용할수록 백업 시간이 길어지지만 디스크 공간을 절약할 수 있습니다.",
     "settings:backup:format:default": "기본값(낮은 압축률 ZIP)",
-    "settings:backup:format:zip-store": "무압축 ZIP(빠름)",
+    "settings:backup:format:zip-store": "압축하지 않은 ZIP(빠름)",
     "settings:backup:format:zip-fast": "낮은 압축률 ZIP(느림)",
     "settings:backup:format:zip-best": "높은 압축률 ZIP(가장 느림)",
     "settings:backup:exclude vpm packages from backup": "VPM 패키지 파일을 백업에서 제외",
@@ -534,7 +534,7 @@
     "check update:dialog:new version updater how to upgrade fallback": "자동 업데이트가 비활성화되어 있습니다. 패키지 관리자를 통해 업데이트해 주세요.",
     "check update:dialog:current version": "사용 중인 버전:",
     "check update:dialog:latest version": "최신 버전:",
-    "check update:dialog:changelog": "변경 사항",
+    "check update:dialog:changelog": "변경 내역",
     "check update:dialog:dismiss": "나중에",
     "check update:dialog:open download page": "다운로드 페이지 열기",
     "check update:dialog:update": "업데이트",
@@ -562,7 +562,7 @@
     "logs:time": "시간",
     "logs:level": "수준",
     "logs:message": "메시지",
-    "logs:manage:select logs level": "로그 수준 필터",
+    "logs:manage:select logs level": "필터",
     "logs:manage:auto scroll": "자동 스크롤",
   },
 }
