@@ -175,7 +175,7 @@
     "projects:toast:unity exits with non-zero": "Unity가 비정상적으로 종료되었습니다.",
 
     "projects:button:migrate": "마이그레이션",
-    "projects:tooltip:sdk2 migration hint": "SDK2 프로젝트는 자동으로 마이그레이션할 수 없습니다.<br>먼저 수동으로 SDK3으로 마이그레이션해 주세요.",
+    "projects:tooltip:sdk2 migration hint": "SDK2 프로젝트는 자동으로 마이그레이션(데이터 이전)할 수 없습니다.<br>먼저 SDK3으로 수동 마이그레이션을 진행해 주세요.",
     "projects:tooltip:git-vcc not supported": "git-VCC 프로젝트는 지원하지 않습니다.",
     "projects:tooltip:no upm in unity": "Unity 2017 또는 그 이전에 생성된 프로젝트에서는 VPM이 지원되지 않습니다.",
     "projects:dialog:vpm migrate header": "레거시 프로젝트 마이그레이션",
